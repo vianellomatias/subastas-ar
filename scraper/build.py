@@ -34,12 +34,12 @@ def escribir(path, obj):
         json.dump(obj, f, ensure_ascii=False, separators=(',', ':'))
 
 
-def fuente(nombre, fn, estado):
-    """Corre una fuente; si falla o viene vacía, devuelve la última versión buena."""
+def fuente(nombre, fn, estado, puede_estar_vacia=False):
+    """Corre una fuente; si falla (o viene vacía sin poder estarlo), devuelve la última versión buena."""
     path, t0 = os.path.join(CACHE, 'fuentes', nombre + '.json'), time.time()
     try:
         lots = fn()
-        if not lots:
+        if not lots and not puede_estar_vacia:
             raise RuntimeError('no devolvió lotes')
         escribir(path, {'t': time.time(), 'lots': lots})
         estado[nombre] = {'ok': True, 'n': len(lots), 't': time.time()}
@@ -79,16 +79,20 @@ def main():
             nombre = os.path.basename(path)[:-5]
             lots += prev.get('lots', [])
             estado[nombre] = {'ok': True, 'n': len(prev.get('lots', [])), 't': prev.get('t')}
-        judicial.detalles(None, lots, leer(os.path.join(CACHE, "detalles.json"), {}))
+        judicial.detalles(None, lots, leer(os.path.join(CACHE, 'detalles.json'), {}))
+        bancociudad.descripciones(None, lots, leer(os.path.join(CACHE, 'bancociudad_lotes.json'), {}))
     else:
         from .red import Navegador
         with Navegador() as nav:
-            for src in judicial.PORTALES:
-                lots += fuente(src, lambda: judicial.listado(nav, src), estado)
+            for src in judicial.PORTALES:  # Mendoza recién arranca: puede no tener subastas publicadas
+                lots += fuente(src, lambda: judicial.listado(nav, src), estado, puede_estar_vacia=src == 'mendoza')
             cache_fichas = leer(os.path.join(CACHE, 'detalles.json'), {})
             judicial.detalles(nav, lots, cache_fichas)
             escribir(os.path.join(CACHE, 'detalles.json'), cache_fichas)
             lots += fuente('bancociudad', lambda: bancociudad.lotes(nav), estado)
+            cache_bc = leer(os.path.join(CACHE, 'bancociudad_lotes.json'), {})
+            bancociudad.descripciones(nav, lots, cache_bc)
+            escribir(os.path.join(CACHE, 'bancociudad_lotes.json'), cache_bc)
         lots += fuente('esubasta', esubasta.lotes, estado)
 
     shutil.rmtree(OUT, ignore_errors=True)

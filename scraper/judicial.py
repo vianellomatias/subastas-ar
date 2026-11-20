@@ -1,4 +1,4 @@
-"""Portal de subastas electrónicas judiciales que usan la CSJN y la SCBA (mismo software)."""
+"""Portal de subastas electrónicas judiciales que usan la CSJN, la SCBA y Mendoza (mismo software)."""
 import logging
 import re
 import time
@@ -7,7 +7,8 @@ from datetime import datetime
 from .common import cat_from_text, clean, iso, money, norm, prov_from_text, sentence, text_of
 
 PORTALES = {'csjn': 'https://subastaselectronicasjudiciales.csjn.gov.ar',
-            'scba': 'https://subastas.scba.gov.ar'}
+            'scba': 'https://subastas.scba.gov.ar',
+            'mendoza': 'https://esubastas.jus.mendoza.gov.ar'}
 ESTADO = {'Published': 'proxima', 'InProgress': 'en_curso', 'Finalized': 'finalizada', 'Finished': 'finalizada',
           'Canceled': 'cancelada', 'Cancelled': 'cancelada', 'Suspended': 'cancelada'}
 SCBA_DEPTO = {'AZ': 'Azul', 'BB': 'Bahía Blanca', 'DO': 'Dolores', 'JU': 'Junín', 'LM': 'La Matanza',
@@ -65,6 +66,8 @@ def parse_listado(h, src):
         if src == 'scba':
             depto = SCBA_DEPTO.get(re.sub(r'\d', '', code)[:2])
             prov, org = 'Buenos Aires', 'Poder Judicial de Buenos Aires' + (f' – Depto. Judicial {depto}' if depto else '')
+        elif src == 'mendoza':
+            prov, org = 'Mendoza', 'Poder Judicial de Mendoza'
         else:
             prov = prov_from_text(title, 'CABA')
             org = 'Justicia Nacional y Federal' + (' – Comercial' if code.startswith('COM') else
@@ -119,7 +122,8 @@ def parse_detalle(h):
 
 
 def listado(nav, src):
-    return parse_listado(nav.html(PORTALES[src] + '/', selector='li.auction_card'), src)
+    # espera las tarjetas o el aviso de portal vacío ("Sin subastas publicadas")
+    return parse_listado(nav.html(PORTALES[src] + '/', selector='li.auction_card, :text("Sin subastas")'), src)
 
 
 def detalles(nav, lots, cache, horas=72, presupuesto=15 * 60):

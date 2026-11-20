@@ -3,6 +3,7 @@ Cada subasta tiene varios lotes; se publica uno por lote, con su foto y precio b
 import html
 import logging
 import re
+import time
 
 from .common import cat_from_text, clean, money, prov_from_text, sentence
 
@@ -45,7 +46,8 @@ def parse_home(h):
 
 
 def parse_lotes(h):
-    """Tarjetas de lotes de la página de una subasta: [(id, título, precio base, depósito en garantía)]."""
+    """Tarjetas de lotes de la página de una subasta: [(id, título, precio, depósito en garantía, finalizado)].
+    En las subastas terminadas la tarjeta muestra el precio final en lugar de la base."""
     pos = [m.start() for m in re.finditer(r'<app-lote\b', h)]
     out = []
     for i, p in enumerate(pos):
@@ -54,11 +56,20 @@ def parse_lotes(h):
         desc = re.search(r'texto-descripcion[^"]*">(.*?)</p>', seg, re.S)
         if not lid or not desc:
             continue
-        precio = re.search(r'Precio base\s*</span>\s*<h5[^>]*>(.*?)</h5>', seg, re.S)
+        precio = re.search(r'Precio (base|final)\s*</span>\s*<h5[^>]*>(.*?)</h5>', seg, re.S)
         garantia = re.search(r'Dep\. en garant[ií]a:\s*<span[^>]*>(.*?)</span>', seg, re.S)
         out.append((lid.group(1), clean(re.sub(r'<[^>]+>', ' ', desc.group(1))),
-                    money(precio.group(1)) if precio else None, money(garantia.group(1)) if garantia else None))
+                    money(precio.group(2)) if precio else None, money(garantia.group(1)) if garantia else None,
+                    bool(precio and precio.group(1) == 'final')))
     return out
+
+
+def parse_lote(h):
+    """Página de un lote: descripción completa (en la tarjeta viene cortada con '...') y lugar de exhibición."""
+    d = re.search(r'Detalle de Lote\s*</h5>\s*<p[^>]*>(.*?)</p>', h, re.S)
+    p = re.search(r'Exhibici[oó]n\s*</h5>.*?<span[^>]*font-weight-bold[^>]*>(.*?)</span>', h, re.S)
+    texto = lambda m: clean(re.sub(r'<[^>]+>', ' ', m.group(1))) if m else None
+    return {'desc': texto(d), 'place': texto(p)}
 
 
 def _registro_subasta(s):
@@ -98,20 +109,42 @@ def lotes(nav):
     for s in parse_home(nav.html(BASE + '/', selector='app-subasta')):
         base = _registro_subasta(s)
         items = {}
-        if not s['finalizada']:
-            try:
-                for h in _paginas(nav, s['nro']):
-                    for lid, titulo, precio, garantia in parse_lotes(h):
-                        items[lid] = (titulo, precio, garantia)
-            except Exception as e:  # si falla la subasta, queda publicada como un solo aviso
-                log.warning('subasta %s: %s', s['nro'], e)
+        try:
+            for h in _paginas(nav, s['nro']):
+                for lid, *datos in parse_lotes(h):
+                    items[lid] = datos
+        except Exception as e:  # si falla la subasta, queda publicada como un solo aviso
+            log.warning('subasta %s: %s', s['nro'], e)
         if not items:
             out.append(base)
             continue
-        for lid, (titulo, precio, garantia) in items.items():
+        for lid, (titulo, precio, garantia, final) in items.items():
             out.append({**base, 'id': f'bc-{s["nro"]}-{lid}', 'code': f"Subasta {s['nro']} · Lote {lid}",
                         'title': sentence(titulo), 'cat': cat_from_text(titulo), 'nlots': None,
-                        'auction_title': s['title'], 'price': precio, 'price_label': 'Base',
+                        'auction_title': s['title'], 'price': precio,
+                        'price_label': 'Precio final' if final else 'Base',
                         'guarantee': garantia, 'url': f'{BASE}/lote/{lid}',
                         'img': f'{BASE}/subastas_rest/lotes/imagen/{lid}/1'})
     return out
+
+
+def descripciones(nav, lots, cache, presupuesto=12 * 60):
+    """Reemplaza el título cortado de cada lote por la descripción completa de su página (con caché por lote).
+    Lo que no entre en el presupuesto de tiempo queda para la próxima corrida."""
+    t0, nuevas = time.time(), 0
+    for l in lots:
+        if l['src'] != 'bancociudad' or '/lote/' not in l['url']:
+            continue
+        lid = l['url'].rsplit('/', 1)[1]
+        if lid not in cache and nav and l['title'].endswith('...') and time.time() - t0 < presupuesto:
+            try:
+                cache[lid] = parse_lote(nav.html(l['url'], selector='text=Detalle de Lote', timeout=45_000))
+                nuevas += 1
+            except Exception as e:
+                log.warning('lote %s: %s', lid, e)
+        d = cache.get(lid) or {}
+        if d.get('desc'):
+            l['title'], l['cat'] = sentence(d['desc']), cat_from_text(d['desc'])
+        if d.get('place'):
+            l['place'] = d['place']
+    log.info('descripciones de lotes: %d nuevas, %d en caché', nuevas, len(cache))

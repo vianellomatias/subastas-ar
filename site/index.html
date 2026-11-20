@@ -84,6 +84,12 @@ select{padding:8px 10px;border:1px solid var(--line);border-radius:8px;backgroun
 .pill.cancelada{color:var(--bad)} .pill.sin_fecha{color:var(--done)}
 .pill.finalizada::before,.pill.cancelada::before{border-radius:1px}
 .when{color:var(--muted);font-variant-numeric:tabular-nums}
+.grupo{margin:0;font-size:13px;font-weight:700;color:var(--accent)}
+.iguales{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.iguales li{display:flex;gap:10px;align-items:center;font-size:14px;font-variant-numeric:tabular-nums}
+.iguales small{display:block;color:var(--muted)}
+.iguales img,.iguales .mini{width:64px;height:48px;object-fit:cover;border-radius:6px;flex:none;background:var(--accent-soft)}
+.iguales [aria-current]{font-weight:700;color:var(--ink);text-decoration:none}
 .nuevo{font-weight:700;font-size:12px;line-height:1;padding:4px 8px;border-radius:999px;background:var(--accent);color:var(--accent-ink)}
 .card h3{font:600 16px/1.3 var(--f-body);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .where{margin:0;font-size:13px;color:var(--muted)}
@@ -105,6 +111,7 @@ dialog::backdrop{background:rgb(0 0 0 / .5)}
 .db .hero{margin:0 -18px;max-height:340px;overflow:hidden;background:var(--accent-soft)}
 .db .hero img{width:100%;display:block;object-fit:cover;max-height:340px}
 .db h2{font-size:24px}
+.db h2.largo{font:500 17px/1.5 var(--f-body)}   /* descripción completa del lote */
 .db h3{font-size:19px}
 .kv{display:grid;grid-template-columns:max-content 1fr;gap:6px 14px;margin:0;font-size:15px}
 .kv dt{color:var(--muted)} .kv dd{margin:0;font-variant-numeric:tabular-nums}
@@ -129,7 +136,7 @@ td .ok{color:var(--live);font-weight:700} td .err{color:var(--bad);font-weight:7
 tr:last-child td{border-bottom:0}
 footer{padding:20px 0 36px;color:var(--muted);font-size:14px}
 footer p{max-width:70ch}
-@media (min-width:760px){.top h1{font-size:42px}.db h2{font-size:28px}}
+@media (min-width:760px){.top h1{font-size:42px}.db h2{font-size:28px}.db h2.largo{font-size:18px}}
 @media (prefers-reduced-motion:no-preference){.pill.en_curso::before{animation:blink 2s ease-in-out infinite}}
 @keyframes blink{50%{opacity:.25}}
 </style>
@@ -222,6 +229,10 @@ const SRC = {
   privadas: {name:'Ventas privadas en esubasta.ar', short:'Ventas privadas (esubasta)', how:[
     'Es una venta privada, no judicial: las condiciones las fija el vendedor.',
     'Registrate en esubasta.ar, leé las condiciones del lote y ofertá online hasta el cierre.']},
+  mendoza: {name:'Poder Judicial de Mendoza', short:'Mendoza', home:'https://esubastas.jus.mendoza.gov.ar/', how:[
+    'Inscribite en el Registro General de Postores con el formulario del portal y validá tus datos como indica el tutorial.',
+    'Inscribite en la subasta y depositá la garantía que fija el edicto.',
+    'Ofertá online mientras la subasta está en curso.']},
   bancociudad: {name:'Banco Ciudad (incluye remates de ARCA y otros organismos)', short:'Banco Ciudad y ARCA', home:'https://subastas.bancociudad.com.ar/', how:[
     'Registrate online en el portal de subastas del Banco Ciudad.',
     'Suscribite a la subasta y depositá la caución hasta unas 48 h hábiles antes.',
@@ -245,6 +256,10 @@ function prueba(w) {
   const re = w.length <= 4 ? new RegExp(' ' + w + '(e?s)? ') : null;
   return re ? l => re.test(l._s) : l => l._s.includes(' ' + w);
 }
+// Lo que distingue unidades del mismo artículo: n° de serie, motor, chasis, dominio o lote, y horas de uso
+const ID = /\b(?:serie|nro|n[°º]|n[uú]mero|dominio|chasis)\.?\s*(?:(?:nro|n[°º]|n[uú]mero)\.?\s*)?[a-z0-9][a-z0-9\-\/.]*\d[a-z0-9\-\/]*|\b\d+\s*(?:hs|hrs|horas)\b/gi;
+// Lotes iguales: misma fuente, subasta (o juzgado) y rubro, y el mismo texto salvo esos datos
+const clave = l => [l.src, l.auction_title || l.org || '', l.cat, words(l.title.replace(ID, ' '))].join('|');
 const esNuevo = l => l.visto && Date.now() - Date.parse(l.visto) < 48 * 3600e3;
 const srcKey = l => l.src === 'esubasta' ? (l.sub_src === 'subastas_electrónicas' ? 'privadas' : 'esubasta') : l.src;
 const toCur = (v, from, to) => from === to ? v : from === 'USD' ? v * TC : v / TC;
@@ -253,7 +268,7 @@ const short = (v, c) => (c === 'USD' ? 'US$\u00a0' : '$\u00a0') + (v >= 1e6 ? (v
   : v >= 1e4 ? Math.round(v / 1e3).toLocaleString('es-AR') + '\u00a0mil' : Math.round(v).toLocaleString('es-AR'));
 const fd = s => new Date(s).toLocaleString('es-AR', {day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit', timeZone:'America/Argentina/Buenos_Aires'});
 
-let LOTS = [], LIST = [], BYID = {}, shown = PAGE;
+let LOTS = [], LIST = [], GRUPOS = [], BYID = {}, shown = PAGE;
 const S = {q:'', st:'activas', cats:new Set(), prov:'', src:'', sort:'proximas', foto:false, est:false, fav:false};
 const FAV = new Set((() => { try { return JSON.parse(localStorage.getItem('subastas-fav') || '[]'); } catch { return []; } })());
 const saveFav = () => { try { localStorage.setItem('subastas-fav', JSON.stringify([...FAV])); } catch {} };
@@ -328,13 +343,19 @@ function sortKey(l) {
 }
 const cmp = (a, b) => { for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return a[i] < b[i] ? -1 : 1; return 0; };
 
-function card(l) {
+function rango(g) {   // precios distintos dentro de un grupo
+  const p = g.filter(x => x.price != null && x.cur === g[0].cur).map(x => x.price);
+  const lo = Math.min(...p), hi = Math.max(...p);
+  return p.length > 1 && lo !== hi ? ` · ${short(lo, g[0].cur)} a ${short(hi, g[0].cur)}` : '';
+}
+function card(g) {
+  const l = g[0];
   return `<article class="card" data-id="${esc(l.id)}">
   <a class="open" href="#l=${encodeURIComponent(l.id)}">
     <div class="ph${l.thumb ? '' : ' noimg'}">${l.thumb ? `<img src="${esc(l.thumb)}" alt="" loading="lazy" onerror="this.parentNode.classList.add('noimg')">` : ''}<span>${esc(l.cat)}</span></div>
     <div class="cb">
       <div class="l1"><span class="pill ${l._st}">${PILL[l._st]}</span>${esNuevo(l) ? '<span class="nuevo">Nuevo</span>' : ''}<span class="when">${esc(when(l))}</span></div>
-      <h3>${esc(l.title)}</h3>
+      <h3>${esc(l.title)}</h3>${g.length > 1 ? `<p class="grupo">${g.length} lotes iguales${rango(g)}</p>` : ''}
       <p class="where">${esc(l.prov)} · ${esc(SRC[srcKey(l)].name)}</p>
       <p class="price">${priceHTML(l)}</p>${bidHTML(l)}
       ${l.est ? `<p class="est">${estHTML(l)}</p>` : ''}
@@ -358,15 +379,19 @@ function render() {
     Object.entries(counts).sort((a, b) => b[1] - a[1]).map(([c, n]) =>
       `<button type="button" data-cat="${esc(c)}" aria-pressed="${S.cats.has(c)}">${esc(c)} <span class="n">${n}</span></button>`).join('');
   LIST = LOTS.filter(l => matches(l)).map(l => [sortKey(l), l]).sort((a, b) => cmp(a[0], b[0])).map(x => x[1]);
-  $('#count').textContent = LIST.length === 1 ? '1 lote' : LIST.length.toLocaleString('es-AR') + ' lotes';
-  $('#grid').innerHTML = LIST.length ? LIST.slice(0, shown).map(card).join('')
+  const grupos = new Map();
+  LIST.forEach(l => { const g = grupos.get(l._k); g ? g.push(l) : grupos.set(l._k, [l]); });
+  GRUPOS = [...grupos.values()];
+  $('#count').textContent = (LIST.length === 1 ? '1 lote' : LIST.length.toLocaleString('es-AR') + ' lotes') +
+    (GRUPOS.length < LIST.length ? ` · ${GRUPOS.length.toLocaleString('es-AR')} avisos (los iguales van juntos)` : '');
+  $('#grid').innerHTML = GRUPOS.length ? GRUPOS.slice(0, shown).map(card).join('')
     : '<p class="empty">No hay lotes con esos filtros. Probá con menos palabras o tocá “Limpiar filtros”.</p>';
   botonMas();
   $('#clear').hidden = !(S.q || S.st !== 'activas' || S.cats.size || S.prov || S.src || S.foto || S.est || S.fav);
 }
 
 function botonMas() {
-  const resto = LIST.length - shown;
+  const resto = GRUPOS.length - shown;
   $('#more').hidden = resto <= 0;
   if (resto > 0) $('#more').textContent = `Mostrar ${Math.min(PAGE, resto)} más (quedan ${resto.toLocaleString('es-AR')})`;
 }
@@ -413,11 +438,11 @@ function niceStep(raw) {
 function detail(l) {
   const src = SRC[srcKey(l)], home = src.home || new URL(l.url).origin + '/';
   const row = (k, v) => v ? `<dt>${k}</dt><dd>${v}</dd>` : '';
-  const g = gap(l), e = l.est;
+  const g = gap(l), e = l.est, iguales = LOTS.filter(x => x._k === l._k);
   $('#dBody').innerHTML = `
     ${l.thumb ? `<div class="hero"><img src="${esc(l.thumb)}" alt=""></div>` : '<div style="height:40px"></div>'}
     <div class="l1"><span class="pill ${l._st}">${PILL[l._st]}</span><span class="when">${esc(when(l))}</span></div>
-    <h2 id="dT">${esc(l.title)}</h2>
+    <h2 id="dT"${l.title.length > 140 ? ' class="largo"' : ''}>${esc(l.title)}</h2>
     <dl class="kv">
       ${row('Inicio', l.start && fd(l.start))}${row('Cierre', l.end && fd(l.end))}${row('Inscripción hasta', l.reg_close && fd(l.reg_close))}
       ${l.nlots ? row('Lotes', l.nlots + ' (ver el catálogo en el portal)') : row(esc(l.price_label && l.price != null ? l.price_label : 'Base'), l.price != null ? money(l.price, l.cur) : esc(l.price_label || 'Sin base publicada'))}
@@ -436,6 +461,15 @@ function detail(l) {
         ${row('Base vs. mediana', g == null ? '' : `${Math.abs(Math.round(g * 100))}% ${g < 0 ? 'por debajo' : 'por encima'}`)}
       </dl>
       <p class="note">Orientativo. Al precio de compra sumale la comisión del martillero (suele ser 10% más IVA), sellado e impuestos, y revisá deudas y estado del bien.${e.cur !== l.cur && l.price != null ? ` Conversión a US$ 1 = $ ${TC.toLocaleString('es-AR')}.` : ''}${e.url ? ` <a href="${esc(e.url)}" target="_blank" rel="noopener">Ver avisos</a>` : ''}</p>
+    </section>` : ''}
+    ${iguales.length > 1 ? `<section class="box" aria-labelledby="iT">
+      <h3 id="iT">${iguales.length} lotes iguales</h3>
+      <p class="note">Mismo artículo: el texto del portal es igual salvo n° de serie, motor, dominio u horas de uso, que se ven abajo de cada uno. Cada lote se oferta por separado; tocá uno para ver su ficha.</p>
+      <ul class="iguales">${iguales.map(x => {
+        const ids = x.title.match(ID) || [], nombre = x.code ? x.code.replace(/^Subasta \d+ · /, '') : ids.shift() || 'Ver ficha';
+        return `<li>${x.thumb ? `<img src="${esc(x.thumb)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">` : '<span class="mini"></span>'}
+        <span><a href="#l=${encodeURIComponent(x.id)}"${x.id === l.id ? ' aria-current="true"' : ''}>${esc(nombre[0].toUpperCase() + nombre.slice(1))}</a>
+        <small>${x.price != null ? money(x.price, x.cur) + ' · ' : ''}${PILL[status(x)]}${ids.map(t => ' · ' + esc(t)).join('')}</small></span></li>`; }).join('')}</ul>
     </section>` : ''}
     <section class="box" aria-labelledby="hT">
       <h3 id="hT">Cómo participar</h3>
@@ -473,9 +507,9 @@ function sourcesTable() {
       ['Poder Judicial de ' + p, n[p] || 0, es, 'Portal provincial de la plataforma esubasta.']),
     ['Banco Ciudad', n.bancociudad, est('bancociudad'), 'Subastas propias y de organismos, incluido ARCA (ex AFIP). Un aviso por lote.'],
     ['esubasta.ar (ventas privadas)', n['Privadas (esubasta)'], es, 'Ventas privadas, no judiciales.'],
-    ['Poder Judicial de Mendoza', 0, '', 'Portal propio, todavía no incluido (hoy sin lotes publicados).'],
-    ['Poder Judicial de Río Negro', 0, '', 'No tiene portal de subastas electrónicas: publica los remates por edicto en el Boletín Oficial.'],
-    ['Pendientes', '–', '', 'Tucumán, AABE (inmuebles del Estado nacional) y boletines oficiales provinciales.']
+    ['Poder Judicial de Mendoza', n.mendoza || 0, est('mendoza'), 'Portal electrónico nuevo (mismo sistema que la CSJN); aparecen solas las subastas que publique.'],
+    ['Poder Judicial de Río Negro', 0, '', 'No tiene portal de subastas electrónicas: publica los remates por edicto en su Boletín Oficial (PDF, sin fotos).'],
+    ['Pendientes', '–', '', 'Edictos de remates presenciales en boletines oficiales provinciales, Tucumán y AABE (inmuebles del Estado nacional).']
   ];
   $('#srcRows').innerHTML = rows.map(([a, b, c, d]) => `<tr><td>${esc(a)}</td><td class="n">${b ?? 0}</td><td>${c}</td><td>${esc(d)}</td></tr>`).join('');
 }
@@ -496,7 +530,7 @@ function bind() {
   for (const [id, k] of [['fFoto', 'foto'], ['fEst', 'est'], ['fFav', 'fav']])
     $('#' + id).addEventListener('change', e => { S[k] = e.target.checked; shown = PAGE; render(); });
   $('#more').addEventListener('click', () => {
-    $('#grid').insertAdjacentHTML('beforeend', LIST.slice(shown, shown + PAGE).map(card).join(''));
+    $('#grid').insertAdjacentHTML('beforeend', GRUPOS.slice(shown, shown + PAGE).map(card).join(''));
     shown += PAGE; botonMas();
   });
   $('#clear').addEventListener('click', () => {
@@ -521,7 +555,7 @@ Promise.all([
   fetch('data/meta.json').then(r => r.ok ? r.json() : {}).catch(() => ({}))
 ]).then(([data, meta]) => {
   LOTS = data; META = meta;
-  LOTS.forEach(l => { l._s = words([l.title, l.cat, l.prov, l.org, l.code, l.place, l.auction_title].join(' ')); BYID[l.id] = l; });
+  LOTS.forEach(l => { l._s = words([l.title, l.cat, l.prov, l.org, l.code, l.place, l.auction_title].join(' ')); l._k = clave(l); BYID[l.id] = l; });
   const provs = [...new Set(LOTS.map(l => l.prov))].sort((a, b) => a.localeCompare(b, 'es'));
   $('#prov').innerHTML = '<option value="">Todas las provincias</option>' + provs.map(p => `<option>${esc(p)}</option>`).join('');
   $('#src').innerHTML = '<option value="">Todas las fuentes</option>' + Object.entries(SRC).map(([k, v]) => `<option value="${k}">${esc(v.short)}</option>`).join('');

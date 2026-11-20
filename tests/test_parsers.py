@@ -66,7 +66,7 @@ def test_banco_ciudad():
     assert s['start'] == '2026-11-20T11:00:00-03:00' and s['end'] == '2026-11-20T17:00:00-03:00'
     lotes = bancociudad.parse_lotes(leer('bc_subasta.html'))
     assert lotes[0] == ('145037', 'CUATRO COMPUTADORAS DE ESCRITORIO MARCA LENOVO, MODELOS V520S-08IKL, V...',
-                        291214.0, 58242.8)
+                        291214.0, 58242.8, False)
     assert len(lotes) == 3
 
 
@@ -123,3 +123,23 @@ def test_rubros_con_titulos_reales():
     for titulo, rubro in casos.items():
         assert common.cat_from_text(titulo) == rubro, titulo
     assert common.cat_from_text('Flores- piso c/ 4 amb.', 'Inmueble') == 'Inmuebles'
+
+
+def test_banco_ciudad_finalizada_y_ficha_de_lote():
+    lotes = bancociudad.parse_lotes(leer('bc_finalizada.html'))
+    assert len(lotes) == 2 and all(final for *_, final in lotes)
+    lid, titulo, precio, garantia, final = lotes[0]
+    assert precio == 1150000 and garantia == 210000 and titulo.startswith('UNA BICICLETA')
+    assert not bancociudad.parse_lotes(leer('bc_subasta.html'))[0][4]  # subasta abierta: precio base
+    d = bancociudad.parse_lote(leer('bc_lote.html'))
+    assert d['desc'].startswith('UN LOTE INTEGRADO POR 4 MOTOSIERRAS') and d['desc'].endswith('INCOMPLETAS.')
+    assert d['place'].startswith('Ruta 8 KM 95')
+    lot = {'src': 'bancociudad', 'url': bancociudad.BASE + '/lote/145159', 'title': 'Un lote integrado por 4 motosierras...',
+           'cat': 'Inmuebles'}
+    bancociudad.descripciones(None, [lot], {'145159': d})
+    assert lot['title'].startswith('Un lote integrado por 4 motosierras a explosion marca stihl de diferentes cilindradas')
+    assert lot['cat'] == 'Herramientas' and lot['place'].startswith('Ruta 8')
+
+
+def test_portal_vacio():
+    assert judicial.parse_listado('<div>Sin subastas publicadas</div><div>Sin subastas en curso</div>', 'mendoza') == []

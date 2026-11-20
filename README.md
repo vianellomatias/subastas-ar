@@ -10,15 +10,16 @@ La página se actualiza sola cada 2 horas con GitHub Actions y se publica en Git
 |---|---|
 | Poder Judicial de la Nación (CSJN) | Listado y ficha de cada lote, con Chromium (Playwright) |
 | Poder Judicial de Buenos Aires (SCBA) | Igual que la CSJN (mismo software) |
+| Poder Judicial de Mendoza | Igual que la CSJN (mismo software; hoy sin subastas publicadas) |
 | Portales judiciales de Córdoba, Salta, Entre Ríos, La Pampa, San Juan, Chaco, San Luis y Jujuy, y ventas privadas de esubasta.ar | API pública de la plataforma esubasta |
-| Banco Ciudad (incluye remates de ARCA y otros organismos) | Portada y páginas de cada subasta, con Chromium; un aviso por lote |
+| Banco Ciudad (incluye remates de ARCA y otros organismos) | Portada, páginas de cada subasta (también las finalizadas, con su precio final) y ficha de cada lote para la descripción completa, con Chromium; un aviso por lote |
 
 Precio de referencia:
 - Vehículos: avisos de usados en Autocosmos para la misma marca, modelo y año (se renuevan cada 7 días).
 - Resto: referencias cargadas a mano en `data/precios_manual.json`.
 - MercadoLibre no se usa porque bloquea la lectura automática de sus listados.
 
-Pendientes: Mendoza (portal propio, hoy sin lotes), Tucumán, AABE y boletines oficiales. Río Negro no tiene portal: publica los remates por edicto.
+Pendientes: edictos de remates presenciales en boletines oficiales provinciales (texto libre en PDF, sin fotos), Tucumán y AABE. Río Negro no tiene portal: publica los remates por edicto. Los juzgados nacionales y federales publican en el portal de la CSJN, que ya está incluido.
 
 ## Puesta en marcha (una sola vez)
 
@@ -45,6 +46,7 @@ tests/            pruebas de los parsers con páginas reales recortadas
 - Entre corridas se guardan en la caché de Actions las fotos, las fichas de lotes y los precios, así cada actualización solo baja lo nuevo.
 - Los estados y las cuentas regresivas se recalculan en el navegador con la hora actual.
 - Cada lote guarda cuándo apareció por primera vez: los de las últimas 48 h llevan la etiqueta "Nuevo" y se pueden ordenar con "Recién publicados".
+- Los lotes con el mismo texto (misma subasta y rubro) salvo n° de serie, motor, chasis, dominio, n° de lote u horas de uso se muestran en un solo aviso ("N lotes iguales"); la ficha lista cada uno con lo que lo distingue.
 - El buscador toma las palabras de rubro como rubro ("motos", "bici", "herramientas"…), las palabras cortas como palabra completa y el resto por comienzo de palabra.
 
 ## Probar en la computadora
