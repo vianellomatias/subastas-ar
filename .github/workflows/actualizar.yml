@@ -2,7 +2,7 @@ name: Actualizar subastas
 
 on:
   schedule:
-    - cron: '7 */2 * * *'   # cada 2 horas (hora UTC)
+    - cron: '17 */2 * * *'   # cada 2 horas (hora UTC)
   workflow_dispatch:         # botón "Run workflow" para correrlo a mano
   push:
     branches: [main]
