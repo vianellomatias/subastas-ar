@@ -1,0 +1,78 @@
+name: Actualizar subastas
+
+on:
+  schedule:
+    - cron: '7 */2 * * *'   # cada 2 horas (hora UTC)
+  workflow_dispatch:         # botón "Run workflow" para correrlo a mano
+  push:
+    branches: [main]
+    paths: ['site/**', 'scraper/**', 'data/**', 'tests/**', 'requirements*.txt', '.github/workflows/**']
+
+permissions:
+  contents: write   # commit diario de ultima_actualizacion.txt
+  pages: write
+  id-token: write
+
+concurrency:
+  group: actualizar
+  cancel-in-progress: false
+
+jobs:
+  construir:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Instalar dependencias y Chromium
+        run: |
+          pip install -r requirements.txt -r requirements-dev.txt
+          python -m playwright install --with-deps chromium
+
+      - name: Probar los parsers
+        run: python -m pytest -q
+
+      - name: Recuperar caché (fotos, fichas, precios y última versión de cada fuente)
+        uses: actions/cache/restore@v4
+        with:
+          path: cache
+          key: cache-${{ github.run_id }}
+          restore-keys: cache-
+
+      - name: Armar el sitio
+        run: python -m scraper.build
+
+      - name: Guardar caché
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: cache
+          key: cache-${{ github.run_id }}
+
+      - name: Registrar la fecha (GitHub pausa los cron de repos sin actividad)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ultima_actualizacion.txt
+          git diff --cached --quiet || { git commit -m "Actualización $(cat ultima_actualizacion.txt)" && git push; }
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  publicar:
+    needs: construir
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4

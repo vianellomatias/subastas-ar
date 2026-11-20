@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Subastas Argentina</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@600;700&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* Catálogo operativo: buscador y filtros arriba, grilla de tarjetas, ficha del lote en un diálogo */
+  --bg:#f3f5f7; --surface:#ffffff; --ink:#15212c; --muted:#556575; --line:#d7dee5;
+  --accent:#0b62a0; --accent-ink:#ffffff; --accent-soft:#e2edf6;
+  --live:#1d7f46; --soon:#975800; --done:#667381; --bad:#ad271e;
+  --c-mkt:#2a6db0; --c-base:#c4580a; --c-bid:#6b4bc2;
+  --f-display:"Barlow Semi Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-body:"Source Sans 3",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0e141a; --surface:#16202a; --ink:#e4ebf2; --muted:#9aabbb; --line:#2a3744;
+  --accent:#5aa8e4; --accent-ink:#08131c; --accent-soft:#1a2f43;
+  --live:#4cc07f; --soon:#e0a43c; --done:#8d99a6; --bad:#ef6f66;
+  --c-mkt:#3f7fc4; --c-base:#d8702a; --c-bid:#8a6fd8; color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0e141a; --surface:#16202a; --ink:#e4ebf2; --muted:#9aabbb; --line:#2a3744;
+  --accent:#5aa8e4; --accent-ink:#08131c; --accent-soft:#1a2f43;
+  --live:#4cc07f; --soon:#e0a43c; --done:#8d99a6; --bad:#ef6f66;
+  --c-mkt:#3f7fc4; --c-base:#d8702a; --c-bid:#8a6fd8; color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.45 var(--f-body);-webkit-text-size-adjust:100%}
+a{color:var(--accent)}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1180px;margin:0 auto;padding:0 16px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+h1,h2,h3{font-family:var(--f-display);line-height:1.1;text-wrap:balance;margin:0}
+
+.top{padding:20px 0 12px}
+.top h1{font-size:34px;letter-spacing:.2px}
+.top .tag{margin:4px 0 0;color:var(--muted)}
+.top .meta{margin:8px 0 0;font-size:14px;color:var(--muted);font-variant-numeric:tabular-nums}
+
+.tools{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;padding:12px;background:var(--surface);border:1px solid var(--line);border-radius:12px}
+.search input{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--bg);font-size:17px}
+.seg,.chips,.row{display:flex;gap:8px}
+.seg,.chips{overflow-x:auto;padding-bottom:4px;scrollbar-width:thin}
+.row{flex-wrap:wrap;align-items:center}
+.seg button,.chips button{flex:none;border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:6px 12px;font-size:14px;cursor:pointer;white-space:nowrap}
+.seg button[aria-pressed="true"],.chips button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.chips button .n{opacity:.75;font-variant-numeric:tabular-nums}
+.chips .preset{border-style:dashed}
+select{padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);max-width:100%;min-width:0}
+.row select{flex:1 1 190px}
+.flags label{display:flex;gap:6px;align-items:center;font-size:15px;cursor:pointer}
+.flags input{width:18px;height:18px;accent-color:var(--accent)}
+.clear{border:0;background:none;color:var(--accent);cursor:pointer;text-decoration:underline;padding:4px;font-size:15px}
+.mas summary{cursor:pointer;color:var(--accent);font-weight:700;font-size:15px;padding:4px 2px;list-style-position:inside}
+.mas[open] summary{margin-bottom:10px}
+.mas-c{display:grid;gap:10px}
+.countrow{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:14px 2px 10px}
+.countrow .count{margin:0}
+
+.count{color:var(--muted);font-size:15px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.card{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:flex}
+.card .open{display:flex;flex-direction:column;width:100%;color:inherit;text-decoration:none}
+.ph{aspect-ratio:4/3;background:var(--accent-soft);display:grid;place-items:center;overflow:hidden}
+.ph img{width:100%;height:100%;object-fit:cover;display:block}
+.ph.noimg img{display:none}
+.ph:not(.noimg) span{display:none}
+.ph span{font:700 15px/1.2 var(--f-display);text-transform:uppercase;letter-spacing:1px;color:var(--muted);padding:0 16px;text-align:center}
+.cb{flex:1;display:flex;flex-direction:column;gap:6px;padding:10px 12px 12px}
+.cb .price{margin-top:auto}
+.l1{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px}
+.pill{display:inline-flex;align-items:center;gap:5px;font-weight:700;font-size:12px;line-height:1;padding:4px 8px;border:1px solid currentColor;border-radius:999px}
+.pill::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.pill.proxima{color:var(--soon)} .pill.en_curso{color:var(--live)} .pill.finalizada{color:var(--done)}
+.pill.cancelada{color:var(--bad)} .pill.sin_fecha{color:var(--done)}
+.pill.finalizada::before,.pill.cancelada::before{border-radius:1px}
+.when{color:var(--muted);font-variant-numeric:tabular-nums}
+.card h3{font:600 16px/1.3 var(--f-body);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.where{margin:0;font-size:13px;color:var(--muted)}
+.price{margin:0;font-variant-numeric:tabular-nums}
+.price b{font-size:17px}
+.lbl{font-size:13px;color:var(--muted)}
+.est{margin:0;font-size:13px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.tagd{font-weight:700;padding:2px 6px;border-radius:6px;background:var(--accent-soft)}
+.fav{position:absolute;top:8px;right:8px;width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-size:18px;line-height:1}
+.fav[aria-pressed="true"]{color:var(--c-base);border-color:var(--c-base)}
+.more{display:block;margin:16px auto;padding:10px 22px;border-radius:999px;border:1px solid var(--accent);background:var(--surface);color:var(--accent);font-weight:700;cursor:pointer}
+.empty{padding:24px;text-align:center;color:var(--muted);background:var(--surface);border:1px dashed var(--line);border-radius:12px}
+
+dialog{width:min(680px,calc(100% - 20px));max-height:calc(100% - 20px);border:0;border-radius:14px;padding:0;background:var(--surface);color:var(--ink)}
+dialog::backdrop{background:rgb(0 0 0 / .5)}
+.dh{position:sticky;top:0;display:flex;justify-content:flex-end;padding:8px;background:linear-gradient(var(--surface),transparent);z-index:1}
+.x{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-size:18px}
+.db{padding:0 18px 20px;display:grid;grid-template-columns:minmax(0,1fr);gap:14px;margin-top:-48px}
+.db .hero{margin:0 -18px;max-height:340px;overflow:hidden;background:var(--accent-soft)}
+.db .hero img{width:100%;display:block;object-fit:cover;max-height:340px}
+.db h2{font-size:24px}
+.db h3{font-size:19px}
+.kv{display:grid;grid-template-columns:max-content 1fr;gap:6px 14px;margin:0;font-size:15px}
+.kv dt{color:var(--muted)} .kv dd{margin:0;font-variant-numeric:tabular-nums}
+.note{font-size:14px;color:var(--muted);margin:0}
+.box{border:1px solid var(--line);border-radius:12px;padding:12px;display:grid;grid-template-columns:minmax(0,1fr);gap:10px}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:13px;color:var(--muted)}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.chart svg{display:block;width:100%;max-width:100%;height:auto}
+.chart text{font-family:var(--f-body)}
+.steps{margin:0;padding-left:20px;display:grid;gap:6px}
+.btn{display:inline-block;text-align:center;padding:12px 18px;border-radius:10px;background:var(--accent);color:var(--accent-ink);font-weight:700;text-decoration:none}
+
+.sources{margin:36px 0 12px}
+.sources h2{font-size:24px;margin-bottom:10px}
+.tbl{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:12px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-weight:700;color:var(--muted)}
+td.n{text-align:right;font-variant-numeric:tabular-nums}
+td .ok{color:var(--live);font-weight:700} td .err{color:var(--bad);font-weight:700}
+.bid{margin:0;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+tr:last-child td{border-bottom:0}
+footer{padding:20px 0 36px;color:var(--muted);font-size:14px}
+footer p{max-width:70ch}
+@media (min-width:760px){.top h1{font-size:42px}.db h2{font-size:28px}}
+@media (prefers-reduced-motion:no-preference){.pill.en_curso::before{animation:blink 2s ease-in-out infinite}}
+@keyframes blink{50%{opacity:.25}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <h1>Subastas Argentina</h1>
+    <p class="tag">Remates judiciales y oficiales de todo el país en un solo buscador.</p>
+    <p class="meta" id="meta">Cargando lotes…</p>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="tools" aria-label="Buscar y filtrar">
+    <label class="search" for="q"><span class="sr">Buscar</span>
+      <input id="q" type="search" placeholder="Buscá: hilux 2009, torno, compresor, bicicleta…" autocomplete="off">
+    </label>
+    <div class="seg" id="st" role="group" aria-label="Estado de la subasta"></div>
+    <div class="chips" id="cats" role="group" aria-label="Rubro"></div>
+    <details class="mas" id="mas"><summary>Más filtros y orden</summary><div class="mas-c">
+    <div class="row">
+      <select id="prov" aria-label="Provincia"></select>
+      <select id="src" aria-label="Fuente"></select>
+      <select id="sort" aria-label="Ordenar">
+        <option value="proximas">Próximas a comenzar</option>
+        <option value="terminan">Terminan antes</option>
+        <option value="recientes">Finalizadas más recientes</option>
+        <option value="oportunidad">Base más baja vs. mercado</option>
+        <option value="precio_asc">Base: menor a mayor</option>
+        <option value="precio_desc">Base: mayor a menor</option>
+      </select>
+    </div>
+    <div class="row flags">
+      <label for="fFoto"><input type="checkbox" id="fFoto"> Con foto</label>
+      <label for="fEst"><input type="checkbox" id="fEst"> Con precio de mercado</label>
+      <label for="fFav"><input type="checkbox" id="fFav"> Mis favoritos</label>
+    </div>
+    </div></details>
+  </section>
+
+  <div class="countrow"><p class="count" id="count" aria-live="polite"></p><button class="clear" id="clear" type="button" hidden>Limpiar filtros</button></div>
+  <section class="grid" id="grid" aria-label="Lotes"></section>
+  <button class="more" id="more" type="button" hidden>Mostrar más</button>
+
+  <section class="sources" id="fuentes" aria-labelledby="fuentesT">
+    <h2 id="fuentesT">Fuentes y cobertura</h2>
+    <div class="tbl"><table>
+      <thead><tr><th>Fuente</th><th>Lotes</th><th>Estado</th><th>Notas</th></tr></thead>
+      <tbody id="srcRows"></tbody>
+    </table></div>
+  </section>
+</main>
+
+<footer class="wrap">
+  <p>Agregador independiente, sin relación con los juzgados, bancos ni portales que publican los remates. Antes de ofertar, leé el edicto y las condiciones en el portal oficial: ahí mandan las fechas, la base, la comisión y las deudas del bien.</p>
+  <p id="foot2"></p>
+</footer>
+
+<dialog id="dlg" aria-labelledby="dT">
+  <div class="dh"><button class="x" id="dClose" type="button" aria-label="Cerrar">✕</button></div>
+  <div class="db" id="dBody"></div>
+</dialog>
+
+<noscript><p class="wrap">Esta página necesita JavaScript para buscar y filtrar.</p></noscript>
+
+<script>
+const TC = 1570;                         // ARS por US$ (BNA venta, nov-2026), solo para comparar con el mercado
+let META = {};
+const PAGE = 48;
+const FAV_CATS = ['Autos y camionetas','Motos','Bicicletas','Camiones y utilitarios','Herramientas','Maquinaria industrial','Maquinaria agrícola y vial'];
+const ST = {activas:'Activas', proxima:'Próximas', en_curso:'En curso', finalizada:'Finalizadas', todas:'Todas'};
+const PILL = {proxima:'Próxima', en_curso:'En curso', finalizada:'Finalizada', cancelada:'Cancelada', sin_fecha:'Sin fecha'};
+const SRC = {
+  csjn: {name:'Poder Judicial de la Nación (CSJN)', short:'Nación (CSJN)', home:'https://subastaselectronicasjudiciales.csjn.gov.ar/', how:[
+    'Registrate como postor en el portal y validá tu identidad en forma presencial en la Oficina de Subastas Judiciales (CABA). La validación dura un año.',
+    'Inscribite en la subasta que te interesa dentro del plazo de inscripción.',
+    'Depositá la garantía que indica el edicto: tiene que estar acreditada al menos 3 días hábiles antes. Mandá el comprobante a inscripciones.subastas@csjn.gov.ar.',
+    'Ofertá online mientras la subasta está en curso. Consultas: (011) 4123-4457/4458 o consultas.subastas@csjn.gov.ar.']},
+  scba: {name:'Poder Judicial de Buenos Aires (SCBA)', short:'Buenos Aires (SCBA)', home:'https://subastas.scba.gov.ar/', how:[
+    'Registrate en el portal y validá tus datos en la Seccional del Registro General de Subastas Judiciales de tu departamento judicial.',
+    'Depositá la garantía que fija el edicto (en general, 5% de la base) antes de ofertar.',
+    'La puja dura 10 días hábiles. Si entra una oferta en los últimos 3 minutos, el cierre se extiende.',
+    'Si ganás, pagá saldo, comisión y sellado en los plazos del edicto.']},
+  esubasta: {name:'Portal judicial provincial (esubasta)', short:'Provincias (esubasta)', how:[
+    'Creá tu usuario en el portal de subastas de la provincia (persona humana o empresa) y completá la validación.',
+    'Leé el decreto o edicto del lote: ahí están la seña, la comisión y los plazos. En Córdoba, por ejemplo, se paga 20% más comisión dentro de las 72 h.',
+    'Ofertá online hasta el cierre. La plataforma cobra un cargo de servicio (alrededor de 3 a 5%).']},
+  privadas: {name:'Ventas privadas en esubasta.ar', short:'Ventas privadas (esubasta)', how:[
+    'Es una venta privada, no judicial: las condiciones las fija el vendedor.',
+    'Registrate en esubasta.ar, leé las condiciones del lote y ofertá online hasta el cierre.']},
+  bancociudad: {name:'Banco Ciudad (incluye remates de ARCA y otros organismos)', short:'Banco Ciudad y ARCA', home:'https://subastas.bancociudad.com.ar/', how:[
+    'Registrate online en el portal de subastas del Banco Ciudad.',
+    'Suscribite a la subasta y depositá la caución hasta unas 48 h hábiles antes.',
+    'Ofertá online el día de la subasta. Cada subasta agrupa varios lotes: revisá el catálogo en el portal.']}
+};
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const norm = s => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+const srcKey = l => l.src === 'esubasta' ? (l.sub_src === 'subastas_electrónicas' ? 'privadas' : 'esubasta') : l.src;
+const toCur = (v, from, to) => from === to ? v : from === 'USD' ? v * TC : v / TC;
+const money = (v, c) => (c === 'USD' ? 'US$\u00a0' : '$\u00a0') + Math.round(v).toLocaleString('es-AR');
+const short = (v, c) => (c === 'USD' ? 'US$\u00a0' : '$\u00a0') + (v >= 1e6 ? (v / 1e6).toLocaleString('es-AR', {maximumFractionDigits: 1}) + '\u00a0M'
+  : v >= 1e4 ? Math.round(v / 1e3).toLocaleString('es-AR') + '\u00a0mil' : Math.round(v).toLocaleString('es-AR'));
+const fd = s => new Date(s).toLocaleString('es-AR', {day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit', timeZone:'America/Argentina/Buenos_Aires'});
+
+let LOTS = [], shown = PAGE;
+const S = {q:'', st:'activas', cats:new Set(), prov:'', src:'', sort:'proximas', foto:false, est:false, fav:false};
+const FAV = new Set((() => { try { return JSON.parse(localStorage.getItem('subastas-fav') || '[]'); } catch { return []; } })());
+const saveFav = () => { try { localStorage.setItem('subastas-fav', JSON.stringify([...FAV])); } catch {} };
+
+function status(l) {
+  if (l.status === 'cancelada') return 'cancelada';
+  const t = Date.now(), s = Date.parse(l.start), e = Date.parse(l.end);
+  if (e <= t || l.status === 'finalizada') return 'finalizada';
+  if (s <= t) return 'en_curso';
+  if (s > t) return 'proxima';
+  return l.status || 'sin_fecha';
+}
+function rel(ms) {
+  const m = Math.max(1, Math.round(ms / 60000)), h = Math.floor(m / 60), d = Math.floor(h / 24);
+  return d >= 2 ? d + ' días' : d === 1 ? '1 día ' + (h % 24) + ' h' : h >= 1 ? h + ' h ' + (m % 60) + ' min' : m + ' min';
+}
+function when(l) {
+  const t = Date.now();
+  switch (l._st) {
+    case 'proxima': return l.start ? 'Empieza en ' + rel(Date.parse(l.start) - t) : l.reg_close ? 'Inscripción hasta el ' + fd(l.reg_close).slice(0, 5) : 'Fecha a confirmar';
+    case 'en_curso': return l.end ? 'Termina en ' + rel(Date.parse(l.end) - t) : 'En curso';
+    case 'finalizada': return l.end ? 'Terminó el ' + fd(l.end).slice(0, 10) : 'Finalizada';
+    case 'cancelada': return 'Suspendida o cancelada';
+    default: return 'Sin fecha publicada';
+  }
+}
+function gap(l) {               // base respecto de la mediana de mercado (−0,4 = 40% abajo)
+  if (!l.est || l.price == null) return null;
+  return toCur(l.price, l.cur, l.est.cur) / l.est.med - 1;
+}
+function priceHTML(l) {
+  if (l.nlots) return `<span class="lbl">Subasta de ${l.nlots} lotes</span>`;
+  if (l.price != null) return `<span class="lbl">${esc(l.price_label || 'Base')}</span> <b>${money(l.price, l.cur)}</b>`;
+  return `<span class="lbl">${esc(l.price_label || 'Sin base publicada')}</span>`;
+}
+const bidHTML = l => l.bid != null ? `<p class="bid">Oferta actual ${money(l.bid, l.cur)}</p>` : '';
+function REF(e) {                // rótulos según el tipo de referencia de precio
+  const nuevo = e.kind === 'precio nuevo en tienda', guia = e.kind === 'guía de precios';
+  return {badge: nuevo ? 'Nuevo en tienda ≈' : guia ? 'Guía ≈' : 'Mercado ≈',
+          band: nuevo ? 'Precio nuevo en tienda' : guia ? 'Rango de la guía de precios' : 'Rango de avisos',
+          mid: e.lo === e.hi ? (nuevo ? 'Nuevo' : 'Precio') : 'Mediana'};
+}
+function estHTML(l) {
+  const g = gap(l);
+  return `<span>${REF(l.est).badge} <b>${short(l.est.med, l.est.cur)}</b></span>` +
+    (g == null ? '' : `<span class="tagd">base ${Math.abs(Math.round(g * 100))}% ${g < 0 ? 'abajo' : 'arriba'}</span>`);
+}
+
+function matches(l, skipCats) {
+  if (S.st === 'activas' ? !['proxima', 'en_curso', 'sin_fecha'].includes(l._st) : S.st !== 'todas' && l._st !== S.st) return false;
+  if (!skipCats && S.cats.size && !S.cats.has(l.cat)) return false;
+  if (S.prov && l.prov !== S.prov) return false;
+  if (S.src && srcKey(l) !== S.src) return false;
+  if (S.foto && !l.thumb) return false;
+  if (S.est && !l.est) return false;
+  if (S.fav && !FAV.has(l.id)) return false;
+  return S.terms.every(w => l._s.includes(w));
+}
+const RANK = {en_curso:0, proxima:1, sin_fecha:2, finalizada:3, cancelada:4};
+function sortKey(l) {
+  const s = Date.parse(l.start || l.reg_close) || Infinity, e = Date.parse(l.end) || Infinity;
+  const base = l.price == null ? null : toCur(l.price, l.cur, 'ARS');
+  switch (S.sort) {
+    case 'proximas': return [{proxima:0, en_curso:1, sin_fecha:2, finalizada:3, cancelada:4}[l._st], l._st === 'proxima' ? s : l._st === 'en_curso' ? e : -e];
+    case 'terminan': return [RANK[l._st], l._st === 'finalizada' ? -e : e];
+    case 'recientes': return [l._st === 'finalizada' ? 0 : 1, -e];
+    case 'oportunidad': { const g = gap(l); return [g == null ? 1 : 0, g ?? 0]; }
+    case 'precio_asc': return [base == null ? 1 : 0, base ?? 0];
+    case 'precio_desc': return [base == null ? 1 : 0, -(base ?? 0)];
+  }
+}
+const cmp = (a, b) => { for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return a[i] < b[i] ? -1 : 1; return 0; };
+
+function card(l) {
+  return `<article class="card">
+  <a class="open" href="#l=${encodeURIComponent(l.id)}">
+    <div class="ph${l.thumb ? '' : ' noimg'}">${l.thumb ? `<img src="${esc(l.thumb)}" alt="" loading="lazy" onerror="this.parentNode.classList.add('noimg')">` : ''}<span>${esc(l.cat)}</span></div>
+    <div class="cb">
+      <div class="l1"><span class="pill ${l._st}">${PILL[l._st]}</span><span class="when">${esc(when(l))}</span></div>
+      <h3>${esc(l.title)}</h3>
+      <p class="where">${esc(l.prov)} · ${esc(SRC[srcKey(l)].name)}</p>
+      <p class="price">${priceHTML(l)}</p>${bidHTML(l)}
+      ${l.est ? `<p class="est">${estHTML(l)}</p>` : ''}
+    </div>
+  </a>
+  <button class="fav" type="button" data-fav="${esc(l.id)}" aria-pressed="${FAV.has(l.id)}" aria-label="Guardar en favoritos">${FAV.has(l.id) ? '★' : '☆'}</button>
+</article>`;
+}
+
+function render() {
+  LOTS.forEach(l => l._st = status(l));
+  S.terms = norm(S.q).split(/\s+/).filter(Boolean);
+  // chips de estado
+  $('#st').innerHTML = Object.entries(ST).map(([k, v]) => `<button type="button" data-st="${k}" aria-pressed="${S.st === k}">${v}</button>`).join('');
+  // chips de rubro con conteo según el resto de los filtros
+  const counts = {};
+  LOTS.forEach(l => { if (matches(l, true)) counts[l.cat] = (counts[l.cat] || 0) + 1; });
+  const favOn = FAV_CATS.every(c => S.cats.has(c)) && S.cats.size === FAV_CATS.length;
+  $('#cats').innerHTML = `<button type="button" data-cat="" aria-pressed="${!S.cats.size}">Todos los rubros</button>` +
+    `<button type="button" class="preset" data-preset="1" aria-pressed="${favOn}">Vehículos, herramientas y máquinas</button>` +
+    Object.entries(counts).sort((a, b) => b[1] - a[1]).map(([c, n]) =>
+      `<button type="button" data-cat="${esc(c)}" aria-pressed="${S.cats.has(c)}">${esc(c)} <span class="n">${n}</span></button>`).join('');
+  const list = LOTS.filter(l => matches(l)).map(l => [sortKey(l), l]).sort((a, b) => cmp(a[0], b[0])).map(x => x[1]);
+  $('#count').textContent = list.length === 1 ? '1 lote' : list.length.toLocaleString('es-AR') + ' lotes';
+  $('#grid').innerHTML = list.length ? list.slice(0, shown).map(card).join('')
+    : '<p class="empty">No hay lotes con esos filtros. Probá con menos palabras o tocá “Limpiar filtros”.</p>';
+  $('#more').hidden = list.length <= shown;
+  $('#more').textContent = `Mostrar más (${(list.length - shown).toLocaleString('es-AR')} restantes)`;
+  $('#clear').hidden = !(S.q || S.st !== 'activas' || S.cats.size || S.prov || S.src || S.foto || S.est || S.fav);
+}
+
+function chart(l, width) {
+  const e = l.est, c = e.cur;
+  const base = l.price != null ? toCur(l.price, l.cur, c) : null;
+  const bid = l.bid != null ? toCur(l.bid, l.cur, c) : null;
+  const W = Math.max(280, width), H = 132, pad = 14;
+  const top = Math.max(e.hi, base ?? 0, bid ?? 0) * 1.08;
+  const step = niceStep(top / 4), x = v => pad + (v / top) * (W - 2 * pad);
+  const anchor = px => px < 70 ? 'start' : px > W - 70 ? 'end' : 'middle';
+  const lab = (px, y, txt, cls) => `<text x="${px}" y="${y}" text-anchor="${anchor(px)}" font-size="12.5" ${cls}>${esc(txt)}</text>`;
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Precio de mercado comparado con la base">`;
+  for (let v = 0; v <= top; v += step) {
+    s += `<line x1="${x(v)}" x2="${x(v)}" y1="30" y2="100" stroke="var(--line)" stroke-width="1"/>` +
+         `<text x="${x(v)}" y="118" text-anchor="${v === 0 ? 'start' : 'middle'}" font-size="11.5" fill="var(--muted)">${esc(short(v, c).replace(/^US\$\u00a0|^\$\u00a0/, ''))}</text>`;
+  }
+  s += `<rect x="${x(e.lo)}" y="56" width="${Math.max(4, x(e.hi) - x(e.lo))}" height="16" rx="4" fill="var(--c-mkt)" fill-opacity=".28" stroke="var(--c-mkt)" stroke-width="1.5"><title>${REF(e).band}: ${money(e.lo, c)} a ${money(e.hi, c)}</title></rect>`;
+  s += `<line x1="${x(e.med)}" x2="${x(e.med)}" y1="50" y2="78" stroke="var(--c-mkt)" stroke-width="2"/>`;
+  s += lab(x(e.med), 94, REF(e).mid + ' ' + short(e.med, c), 'fill="var(--ink)"');
+  const marks = [];
+  if (base != null) marks.push(['Base', base, 'var(--c-base)']);
+  if (bid != null) marks.push(['Oferta', bid, 'var(--c-bid)']);
+  marks.forEach(([name, v, col], i) => {
+    const px = x(v), y = i && Math.abs(px - x(marks[0][1])) < 110 ? 14 : 40;
+    s += `<line x1="${px}" x2="${px}" y1="${y + 4}" y2="56" stroke="${col}" stroke-width="2"/>` +
+         `<path d="M${px} 58 l7 6 -7 6 -7 -6z" fill="${col}" stroke="var(--surface)" stroke-width="2"><title>${name}: ${money(v, c)}</title></path>` +
+         lab(px, y, name + ' ' + short(v, c), `fill="var(--ink)" font-weight="700"`);
+  });
+  return s + '</svg>';
+}
+function niceStep(raw) {
+  const p = 10 ** Math.floor(Math.log10(raw)), f = raw / p;
+  return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10) * p;
+}
+
+function detail(l) {
+  const src = SRC[srcKey(l)], home = src.home || new URL(l.url).origin + '/';
+  const row = (k, v) => v ? `<dt>${k}</dt><dd>${v}</dd>` : '';
+  const g = gap(l), e = l.est;
+  $('#dBody').innerHTML = `
+    ${l.thumb ? `<div class="hero"><img src="${esc(l.thumb)}" alt=""></div>` : '<div style="height:40px"></div>'}
+    <div class="l1"><span class="pill ${l._st}">${PILL[l._st]}</span><span class="when">${esc(when(l))}</span></div>
+    <h2 id="dT">${esc(l.title)}</h2>
+    <dl class="kv">
+      ${row('Inicio', l.start && fd(l.start))}${row('Cierre', l.end && fd(l.end))}${row('Inscripción hasta', l.reg_close && fd(l.reg_close))}
+      ${l.nlots ? row('Lotes', l.nlots + ' (ver el catálogo en el portal)') : row(esc(l.price_label && l.price != null ? l.price_label : 'Base'), l.price != null ? money(l.price, l.cur) : esc(l.price_label || 'Sin base publicada'))}
+      ${row('Oferta actual', l.bid != null ? money(l.bid, l.cur) : esc(l.bid_text))}
+      ${row('Depósito en garantía', l.guarantee != null && money(l.guarantee, l.cur))}
+      ${row('Subasta', esc(l.auction_title))}${row('Organismo', esc(l.org))}${row('Juzgado', esc(l.court))}
+      ${row('Martillero', esc(l.auctioneer))}${row('Exhibición', esc(l.place))}${row('Código', esc(l.code))}${row('Fuente', esc(src.name))}
+    </dl>
+    ${e ? `<section class="box" aria-labelledby="mT">
+      <h3 id="mT">Precio de mercado</h3>
+      <p class="note">Referencia: ${esc(e.kind || 'avisos usados')} en ${esc(e.fuente || 'la web')} (${e.n} ${e.n === 1 ? 'precio' : 'precios'}${e.fecha ? ', ' + esc(e.fecha.split('-').reverse().join('/')) : ''}) para ${esc(e.q)}.</p>
+      <div class="legend"><span><i style="background:var(--c-mkt);opacity:.5"></i>${REF(e).band}</span><span><i style="background:var(--c-mkt)"></i>${REF(e).mid}</span>${l.price != null ? '<span><i style="background:var(--c-base)"></i>Base</span>' : ''}${l.bid != null ? '<span><i style="background:var(--c-bid)"></i>Oferta actual</span>' : ''}</div>
+      <div class="chart" id="chart"></div>
+      <dl class="kv">
+        ${row('Rango', e.lo === e.hi ? money(e.lo, e.cur) : `${money(e.lo, e.cur)} a ${money(e.hi, e.cur)}`)}${e.lo === e.hi ? '' : row('Mediana', money(e.med, e.cur))}
+        ${row('Base vs. mediana', g == null ? '' : `${Math.abs(Math.round(g * 100))}% ${g < 0 ? 'por debajo' : 'por encima'}`)}
+      </dl>
+      <p class="note">Orientativo. Al precio de compra sumale la comisión del martillero (suele ser 10% más IVA), sellado e impuestos, y revisá deudas y estado del bien.${e.cur !== l.cur && l.price != null ? ` Conversión a US$ 1 = $ ${TC.toLocaleString('es-AR')}.` : ''}${e.url ? ` <a href="${esc(e.url)}" target="_blank" rel="noopener">Ver avisos</a>` : ''}</p>
+    </section>` : ''}
+    <section class="box" aria-labelledby="hT">
+      <h3 id="hT">Cómo participar</h3>
+      <ol class="steps">${src.how.map(t => `<li>${esc(t)}</li>`).join('')}</ol>
+      <p class="note">Portal: <a href="${esc(home)}" target="_blank" rel="noopener">${esc(new URL(home).host)}</a></p>
+    </section>
+    <a class="btn" href="${esc(l.url)}" target="_blank" rel="noopener">Ver el lote en el portal oficial ↗</a>`;
+  const dlg = $('#dlg');
+  if (!dlg.open) dlg.showModal();
+  dlg.scrollTop = 0;
+  if (e) $('#chart').innerHTML = chart(l, $('#chart').clientWidth);
+}
+
+function fromHash() {
+  const m = location.hash.match(/^#l=(.+)$/);
+  const l = m && LOTS.find(x => x.id === decodeURIComponent(m[1]));
+  if (l) { l._st = status(l); detail(l); } else if ($('#dlg').open) $('#dlg').close();
+}
+
+function hace(iso) {
+  const m = Math.round((Date.now() - Date.parse(iso)) / 60000);
+  return m < 60 ? `hace ${Math.max(m, 1)} min` : m < 48 * 60 ? `hace ${Math.round(m / 60)} h` : `hace ${Math.round(m / 1440)} días`;
+}
+function sourcesTable() {
+  const n = {};
+  LOTS.forEach(l => { const k = l.src === 'esubasta' ? l.prov : srcKey(l); n[k] = (n[k] || 0) + 1; });
+  const f = META.fuentes || {};
+  const est = k => !f[k] ? '' : f[k].ok ? '<span class="ok">Al día</span>'
+    : `<span class="err">Sin respuesta</span>${f[k].t ? ' · datos de ' + hace(new Date(f[k].t * 1000).toISOString()) : ''}`;
+  const es = est('esubasta');
+  const rows = [
+    ['Poder Judicial de la Nación (CSJN)', n.csjn, est('csjn'), 'Juzgados nacionales y federales de todo el país.'],
+    ['Poder Judicial de Buenos Aires (SCBA)', n.scba, est('scba'), 'Todos los departamentos judiciales de la provincia.'],
+    ...['Córdoba', 'Salta', 'Entre Ríos', 'La Pampa', 'San Juan', 'Chaco', 'San Luis', 'Jujuy'].map(p =>
+      ['Poder Judicial de ' + p, n[p] || 0, es, 'Portal provincial de la plataforma esubasta.']),
+    ['Banco Ciudad', n.bancociudad, est('bancociudad'), 'Subastas propias y de organismos, incluido ARCA (ex AFIP). Un aviso por lote.'],
+    ['esubasta.ar (ventas privadas)', n['Privadas (esubasta)'], es, 'Ventas privadas, no judiciales.'],
+    ['Poder Judicial de Mendoza', 0, '', 'Portal propio, todavía no incluido (hoy sin lotes publicados).'],
+    ['Poder Judicial de Río Negro', 0, '', 'No tiene portal de subastas electrónicas: publica los remates por edicto en el Boletín Oficial.'],
+    ['Pendientes', '–', '', 'Tucumán, AABE (inmuebles del Estado nacional) y boletines oficiales provinciales.']
+  ];
+  $('#srcRows').innerHTML = rows.map(([a, b, c, d]) => `<tr><td>${esc(a)}</td><td class="n">${b ?? 0}</td><td>${c}</td><td>${esc(d)}</td></tr>`).join('');
+}
+
+function bind() {
+  let t;
+  $('#q').addEventListener('input', e => { clearTimeout(t); t = setTimeout(() => { S.q = e.target.value; shown = PAGE; render(); }, 150); });
+  $('#st').addEventListener('click', e => { const b = e.target.closest('[data-st]'); if (b) { S.st = b.dataset.st; shown = PAGE; render(); } });
+  $('#cats').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.preset) { const on = b.getAttribute('aria-pressed') === 'true'; S.cats = new Set(on ? [] : FAV_CATS); }
+    else if (!b.dataset.cat) S.cats.clear();
+    else S.cats.has(b.dataset.cat) ? S.cats.delete(b.dataset.cat) : S.cats.add(b.dataset.cat);
+    shown = PAGE; render();
+  });
+  for (const [id, k] of [['prov', 'prov'], ['src', 'src'], ['sort', 'sort']])
+    $('#' + id).addEventListener('change', e => { S[k] = e.target.value; shown = PAGE; render(); });
+  for (const [id, k] of [['fFoto', 'foto'], ['fEst', 'est'], ['fFav', 'fav']])
+    $('#' + id).addEventListener('change', e => { S[k] = e.target.checked; shown = PAGE; render(); });
+  $('#more').addEventListener('click', () => { shown += PAGE; render(); });
+  $('#clear').addEventListener('click', () => {
+    Object.assign(S, {q:'', st:'activas', prov:'', src:'', foto:false, est:false, fav:false}); S.cats.clear();
+    $('#q').value = ''; $('#prov').value = ''; $('#src').value = '';
+    ['fFoto', 'fEst', 'fFav'].forEach(id => $('#' + id).checked = false);
+    shown = PAGE; render();
+  });
+  $('#grid').addEventListener('click', e => {
+    const b = e.target.closest('[data-fav]'); if (!b) return;
+    const id = b.dataset.fav; FAV.has(id) ? FAV.delete(id) : FAV.add(id); saveFav(); render();
+  });
+  $('#dClose').addEventListener('click', () => $('#dlg').close());
+  $('#dlg').addEventListener('click', e => { if (e.target === e.currentTarget) e.currentTarget.close(); });
+  $('#dlg').addEventListener('close', () => { if (location.hash) history.replaceState(null, '', location.pathname + location.search); });
+  addEventListener('hashchange', fromHash);
+  setInterval(render, 60000);   // estados y cuentas regresivas al minuto
+}
+
+Promise.all([
+  fetch('data/lots.json').then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }),
+  fetch('data/meta.json').then(r => r.ok ? r.json() : {}).catch(() => ({}))
+]).then(([data, meta]) => {
+  LOTS = data; META = meta;
+  LOTS.forEach(l => l._s = norm([l.title, l.cat, l.prov, l.org, l.code, l.place, l.auction_title].join(' ')));
+  const provs = [...new Set(LOTS.map(l => l.prov))].sort((a, b) => a.localeCompare(b, 'es'));
+  $('#prov').innerHTML = '<option value="">Todas las provincias</option>' + provs.map(p => `<option>${esc(p)}</option>`).join('');
+  $('#src').innerHTML = '<option value="">Todas las fuentes</option>' + Object.entries(SRC).map(([k, v]) => `<option value="${k}">${esc(v.short)}</option>`).join('');
+  const nEst = LOTS.filter(l => l.est).length, nFoto = LOTS.filter(l => l.thumb).length;
+  const upd = () => $('#meta').textContent = `${LOTS.length.toLocaleString('es-AR')} lotes · ${nFoto.toLocaleString('es-AR')} con foto` +
+    (META.generado ? ` · actualizado ${hace(META.generado)} (se actualiza solo cada 2 horas)` : '');
+  upd(); setInterval(upd, 60000);
+  $('#foot2').textContent = `Precio de mercado: ${nEst} lotes de vehículos, máquinas y herramientas tienen una referencia de avisos de usados (Autocosmos), guías o tiendas. MercadoLibre no permite leer sus listados en forma automática. Es una referencia, no una tasación.`;
+  if (matchMedia('(min-width: 760px)').matches) $('#mas').open = true;
+  sourcesTable(); bind(); render(); fromHash();
+}).catch(err => { $('#meta').textContent = 'No se pudieron cargar los lotes (' + err.message + '). Recargá la página.'; });
+</script>
+</body>
+</html>

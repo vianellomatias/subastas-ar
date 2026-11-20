@@ -1,0 +1,325 @@
+[
+ {
+  "ids": [
+   "csjn-557",
+   "csjn-577"
+  ],
+  "q": "Toyota Hilux 3.0 TDI cabina doble 4x2 SRV/SR, años 2006 a 2012",
+  "lo": 9788,
+  "med": 14200,
+  "hi": 15426,
+  "cur": "USD",
+  "n": 3,
+  "url": "https://auto.mercadolibre.com.ar/MLA-1937825529-toyota-hilux-4x2-cabina-doble-srv-30-tdi-2006-_JM",
+  "kind": "avisos usados",
+  "fuente": "MercadoLibre",
+  "fecha": "2026-11-19"
+ },
+ {
+  "ids": [
+   "csjn-568"
+  ],
+  "q": "Toyota Hilux SW4 3.0 TDI SRV 4x4 automática, año 2007",
+  "lo": 23000000,
+  "med": 28260000,
+  "hi": 45530000,
+  "cur": "ARS",
+  "n": 5,
+  "url": "https://www.autocosmos.com.ar/auto/usado/toyota/sw4",
+  "kind": "avisos usados",
+  "fuente": "Autocosmos",
+  "fecha": "2026-11-19"
+ },
+ {
+  "ids": [
+   "csjn-583",
+   "csjn-584",
+   "csjn-585",
+   "csjn-587"
+  ],
+  "q": "Toyota Corolla XEi 1.8 manual, año 2013",
+  "lo": 13500000,
+  "med": 15500000,
+  "hi": 15700000,
+  "cur": "ARS",
+  "n": 5,
+  "url": "https://www.autocosmos.com.ar/guiadeprecios/toyota/corolla/2013",
+  "kind": "avisos usados",
+  "fuente": "Autocosmos",
+  "fecha": "2026-11-19"
+ },
+ {
+  "ids": [
+   "csjn-502",
+   "csjn-503",
+   "csjn-528"
+  ],
+  "q": "Toyota Corolla 1.8 XLi / XEi, años 2018 a 2019",
+  "lo": 22500000,
+  "med": 26000000,
+  "hi": 28000000,
+  "cur": "ARS",
+  "n": 7,
+  "url": "https://www.autocosmos.com.ar/auto/usado/toyota/corolla?a=2018",
+  "kind": "avisos usados",
+  "fuente": "Autocosmos",
+  "fecha": "2026-11-19"
+ },
+ {
+  "ids": [
+   "csjn-501",
+   "csjn-505",
+   "csjn-507",
+   "csjn-510",
+   "csjn-514",
+   "es-se-remata-toyota-etios-sedan-xs-15-6mt-2017--j76"
+  ],
+  "q": "Toyota Etios sedán 1.5 X/XS, años 2017 a 2019",
+  "lo": 9067,
+  "med": 11200,
+  "hi": 11600,
+  "cur": "USD",
+  "n": 3,
+  "url": "https://auto.mercadolibre.com.ar/MLA-4159527270-toyota-etios-15-sedan-xs-_JM",
+  "kind": "avisos usados",
+  "fuente": "MercadoLibre",
+  "fecha": "2026-11-19"
+ },
+ {
+  "ids": [
+   "csjn-458",
+   "csjn-459",
+   "csjn-460",
+   "csjn-461",
+   "csjn-463",
+   "csjn-464"
+  ],
+  "q": "Chevrolet S10 2.8 TDI STD (cabina simple o doble), años 2009 a 2012",
+  "lo": 17270000,
+  "med": 19075500,
+  "hi": 20881000,
+  "cur": "ARS",
+  "n": 2,
+  "url": "https://www.autocosmos.com.ar/auto/usado/chevrolet/s-10",
+  "kind": "avisos usados",
+  "fuente": "Autocosmos",
+  "fecha": "2026-11-19"
+ },
+ {
+  "ids": [
+   "csjn-516",
+   "csjn-518",
+   "csjn-519",
+   "csjn-521",
+   "csjn-527",
+   "csjn-422",
+   "csjn-423"
+  ],
+  "q": "Renault Kangoo II Express Confort 1.6 SCe furgón, año 2019",
+  "lo": 19875000,
+  "med": 21837500,
+  "hi": 23800000,
+  "cur": "ARS",
+  "n": 2,
+  "url": "https://auto.mercadolibre.com.ar/MLA-4188310078-renault-kangoo-ex-16-confort-sce-l18-2019-_JM",
+  "kind": "avisos usados",
+  "fuente": "MercadoLibre",
+  "fecha": "2026-11-19"
+ },
+ {
+  "ids": [
+   "csjn-520",
+   "csjn-522",
+   "csjn-523"
+  ],
+  "q": "Renault Logan Authentique Plus 1.6, año 2019",
+  "lo": 15500000,
+  "med": 16000000,
+  "hi": 19625000,
+  "cur": "ARS",
+  "n": 3,
+  "url": "https://www.autocosmos.com.ar/guiadeprecios/renault/logan/2019",
+  "kind": "avisos usados",
+  "fuente": "Autocosmos",
+  "fecha": "2026-11-19"
+ },
+ {
+  "ids": [
+   "csjn-566",
+   "csjn-567",
+   "csjn-573",
+   "csjn-586",
+   "csjn-589"
+  ],
+  "q": "Camión Mercedes-Benz 710 (Accelo/LO 710), años 2006 a 2014",
+  "lo": 14990,
+  "med": 20995,
+  "hi": 27000,
+  "cur": "USD",
+  "n": 2,
+  "url": "https://www.agroads.com.ar/seccion.asp?marca=275&subcat=18&modelo=1918",
+  "kind": "avisos usados",
+  "fuente": "Agroads",
+  "fecha": "2026-11-19"
+ },
+ {
+  "ids": [
+   "csjn-618",
+   "csjn-619",
+   "es-fiat-palio-2014--xmb",
+   "es-fiat-palio-essence-2014--mpw"
+  ],
+  "q": "Fiat Palio 1.4 5 puertas (Attractive/Fire/Essence), años 2013 a 2014",
+  "lo": 6000000,
+  "med": 7398784,
+  "hi": 11902896,
+  "cur": "ARS",
+  "n": 3,
+  "url": "https://auto.mercadolibre.com.ar/MLA-2297170895-fiat-palio-14-attractive-85cv-_JM",
+  "kind": "avisos usados",
+  "fuente": "MercadoLibre",
+  "fecha": "2026-11-19"
+ },
+ {
+  "ids": [
+   "scba-5323",
+   "scba-5300",
+   "csjn-511",
+   "es-peugeot-208-active-16-2018--8l2"
+  ],
+  "q": "Peugeot 208 1.6 (Active/Allure/Feline), años 2017 a 2019",
+  "lo": 8000000,
+  "med": 17200000,
+  "hi": 21195000,
+  "cur": "ARS",
+  "n": 11,
+  "url": "https://www.autocosmos.com.ar/guiadeprecios/peugeot/208/2017",
+  "kind": "avisos usados",
+  "fuente": "Autocosmos",
+  "fecha": "2026-11-19"
+ },
+ {
+  "ids": [
+   "csjn-564",
+   "scba-5328"
+  ],
+  "q": "Volkswagen Saveiro 1.6 pick-up, años 2013 a 2017",
+  "lo": 15500000,
+  "med": 15949500,
+  "hi": 16799998,
+  "cur": "ARS",
+  "n": 6,
+  "url": "https://www.autocosmos.com.ar/guiadeprecios/volkswagen/saveiro/pick-up/2016",
+  "kind": "avisos usados",
+  "fuente": "Autocosmos",
+  "fecha": "2026-11-19"
+ },
+ {
+  "ids": [
+   "scba-5324",
+   "scba-5087",
+   "es-chevrolet-prisma-joy-4p-14-n-ls-mt-ano-2017--tsg"
+  ],
+  "q": "Chevrolet Prisma Joy 1.4 LS, año 2017",
+  "lo": 11426000,
+  "med": 11557000,
+  "hi": 11688000,
+  "cur": "ARS",
+  "n": 2,
+  "url": "https://www.autocosmos.com.ar/guiadeprecios/chevrolet/prisma/2017",
+  "kind": "guía de precios",
+  "fuente": "Autocosmos",
+  "fecha": "2026-11-19"
+ },
+ {
+  "ids": [
+   "csjn-615"
+  ],
+  "q": "Tractor New Holland T7.260, años 2021 a 2023",
+  "lo": 86400,
+  "med": 131750,
+  "hi": 135000,
+  "cur": "USD",
+  "n": 4,
+  "url": "https://www.agroads.com.ar/seccion.asp?marca=43&subcat=10&modelo=3055&tipo=usado&rubro3=247",
+  "kind": "avisos usados",
+  "fuente": "Agroads",
+  "fecha": "2026-11-19"
+ },
+ {
+  "ids": [
+   "csjn-614"
+  ],
+  "q": "Cosechadora New Holland CR6.80, años 2020 a 2022",
+  "lo": 260000,
+  "med": 265000,
+  "hi": 270000,
+  "cur": "USD",
+  "n": 2,
+  "url": "https://www.agroads.com.ar/seccion.asp?marca=43&subcat=11&tipo=usado",
+  "kind": "avisos usados",
+  "fuente": "Agroads",
+  "fecha": "2026-11-19"
+ },
+ {
+  "ids": [
+   "es-compresor-dowen-pagio-25-hp-50litros--wws"
+  ],
+  "q": "Compresor Dowen Pagio 2,5 HP 50 litros",
+  "lo": 429999,
+  "med": 429999,
+  "hi": 429999,
+  "cur": "ARS",
+  "n": 1,
+  "url": "https://www.jcnarcisi.com.ar/productos/compresor-dowen-pagio-25-hp-x-50-lts/",
+  "kind": "precio nuevo en tienda",
+  "fuente": "JC Narcisi",
+  "fecha": "2026-11-19"
+ },
+ {
+  "ids": [
+   "es-sierra-ingletadora-skil-3310-1800w--fvx"
+  ],
+  "q": "Sierra ingletadora Skil 3310 1800 W",
+  "lo": 299999,
+  "med": 299999,
+  "hi": 299999,
+  "cur": "ARS",
+  "n": 1,
+  "url": "https://www.sodimac.com.ar/sodimac-ar/product/1751662/sierra-ingletadora-1800-w/1751662/",
+  "kind": "precio nuevo en tienda",
+  "fuente": "Sodimac",
+  "fecha": "2026-11-19"
+ },
+ {
+  "ids": [
+   "es-mountainbike-marca-slp-modelo-25pro-lady--nhw"
+  ],
+  "q": "Bicicleta mountain bike SLP 25 Pro rodado 29",
+  "lo": 451999,
+  "med": 451999,
+  "hi": 451999,
+  "cur": "ARS",
+  "n": 1,
+  "url": "https://biciperetti.com.ar/producto/slp-25-pro-r29/",
+  "kind": "precio nuevo en tienda",
+  "fuente": "Bici Peretti",
+  "fecha": "2026-11-19"
+ },
+ {
+  "ids": [
+   "csjn-569",
+   "csjn-574"
+  ],
+  "q": "Toyota Hilux 2.5 TD DX, años 2008 a 2009 (cabina simple y doble)",
+  "lo": 17000000,
+  "med": 21500000,
+  "hi": 25000000,
+  "cur": "ARS",
+  "n": 5,
+  "url": "https://www.deruedas.com.ar/vendo/Toyota/Hilux/Usados/San-Juan?cod=800875",
+  "kind": "avisos usados",
+  "fuente": "deRuedas y Autocosmos",
+  "fecha": "2026-11-19"
+ }
+]
