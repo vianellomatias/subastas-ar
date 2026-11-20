@@ -46,6 +46,7 @@ tests/            pruebas de los parsers con páginas reales recortadas
 - Entre corridas se guardan en la caché de Actions las fotos, las fichas de lotes y los precios, así cada actualización solo baja lo nuevo.
 - Los estados y las cuentas regresivas se recalculan en el navegador con la hora actual.
 - Cada lote guarda cuándo apareció por primera vez: los de las últimas 48 h llevan la etiqueta "Nuevo" y se pueden ordenar con "Recién publicados".
+- En Buenos Aires se puede filtrar por departamento judicial (Morón, La Plata, Mar del Plata...); el buscador también encuentra por juzgado o ciudad del juzgado.
 - Los lotes con el mismo texto (misma subasta y rubro) salvo n° de serie, motor, chasis, dominio, n° de lote u horas de uso se muestran en un solo aviso ("N lotes iguales"); la ficha lista cada uno con lo que lo distingue.
 - El buscador toma las palabras de rubro como rubro ("motos", "bici", "herramientas"…), las palabras cortas como palabra completa y el resto por comienzo de palabra.
 

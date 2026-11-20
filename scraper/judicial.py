@@ -11,9 +11,9 @@ PORTALES = {'csjn': 'https://subastaselectronicasjudiciales.csjn.gov.ar',
             'mendoza': 'https://esubastas.jus.mendoza.gov.ar'}
 ESTADO = {'Published': 'proxima', 'InProgress': 'en_curso', 'Finalized': 'finalizada', 'Finished': 'finalizada',
           'Canceled': 'cancelada', 'Cancelled': 'cancelada', 'Suspended': 'cancelada'}
-SCBA_DEPTO = {'AZ': 'Azul', 'BB': 'Bahía Blanca', 'DO': 'Dolores', 'JU': 'Junín', 'LM': 'La Matanza',
+SCBA_DEPTO = {'AZ': 'Azul', 'BB': 'Bahía Blanca', 'DL': 'Dolores', 'JU': 'Junín', 'LM': 'La Matanza',
               'LP': 'La Plata', 'LZ': 'Lomas de Zamora', 'MP': 'Mar del Plata', 'ME': 'Mercedes', 'MO': 'Morón',
-              'MR': 'Moreno-Gral. Rodríguez', 'NE': 'Necochea', 'PE': 'Pergamino', 'QU': 'Quilmes',
+              'MR': 'Moreno-Gral. Rodríguez', 'NE': 'Necochea', 'PE': 'Pergamino', 'QL': 'Quilmes',
               'SI': 'San Isidro', 'SM': 'San Martín', 'SN': 'San Nicolás', 'TL': 'Trenque Lauquen',
               'ZC': 'Zárate-Campana', 'AL': 'Avellaneda-Lanús', 'AV': 'Avellaneda-Lanús'}
 CARD = re.compile(r'<li\b([^>]*\bauction_card\b[^>]*)>(.*?)</li>', re.S)

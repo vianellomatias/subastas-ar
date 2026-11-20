@@ -160,6 +160,7 @@ footer p{max-width:70ch}
     <details class="mas" id="mas"><summary>Más filtros y orden</summary><div class="mas-c">
     <div class="row">
       <select id="prov" aria-label="Provincia"></select>
+      <select id="depto" aria-label="Departamento judicial" hidden></select>
       <select id="src" aria-label="Fuente"></select>
       <select id="sort" aria-label="Ordenar">
         <option value="proximas">Próximas a comenzar</option>
@@ -261,6 +262,8 @@ function prueba(w) {
 const ID = /\b(?:(?:nros?|n[°º]s?|n[uú]meros?)\.?\s*(?:de\s+)?serie|serie|nros?|n[°º]|n[uú]mero|dominio|chasis)\.?[:,]?\s*(?:(?:nro|n[°º]|n[uú]mero)\.?\s*)?[a-z0-9][a-z0-9\-\/.]*\d[a-z0-9\-\/]*|\b\d+\s*(?:hs|hrs|horas)\b|\b(?=[a-z]*\d)[a-z0-9]{11,}\b/gi;
 // Lotes iguales: misma fuente, subasta (o juzgado) y rubro, y el mismo texto salvo esos datos
 const clave = l => [l.src, l.auction_title || l.org || '', l.cat, words(l.title.replace(ID, ' '))].join('|');
+// Departamento judicial de la provincia de Buenos Aires (Morón, La Plata...), si el lote es de la SCBA
+const depto = l => (/Depto\. Judicial (.+)$/.exec(l.org || '') || [])[1] || '';
 const esNuevo = l => l.visto && Date.now() - Date.parse(l.visto) < 48 * 3600e3;
 const srcKey = l => l.src === 'esubasta' ? (l.sub_src === 'subastas_electrónicas' ? 'privadas' : 'esubasta') : l.src;
 const toCur = (v, from, to) => from === to ? v : from === 'USD' ? v * TC : v / TC;
@@ -270,7 +273,7 @@ const short = (v, c) => (c === 'USD' ? 'US$\u00a0' : '$\u00a0') + (v >= 1e6 ? (v
 const fd = s => new Date(s).toLocaleString('es-AR', {day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit', timeZone:'America/Argentina/Buenos_Aires'});
 
 let LOTS = [], LIST = [], GRUPOS = [], BYID = {}, shown = PAGE;
-const S = {q:'', st:'activas', cats:new Set(), prov:'', src:'', sort:'proximas', foto:false, est:false, fav:false};
+const S = {q:'', st:'activas', cats:new Set(), prov:'', depto:'', src:'', sort:'proximas', foto:false, est:false, fav:false};
 const FAV = new Set((() => { try { return JSON.parse(localStorage.getItem('subastas-fav') || '[]'); } catch { return []; } })());
 const saveFav = () => { try { localStorage.setItem('subastas-fav', JSON.stringify([...FAV])); } catch {} };
 
@@ -322,6 +325,7 @@ function matches(l, skipCats) {
   if (S.st === 'activas' ? !['proxima', 'en_curso', 'sin_fecha'].includes(l._st) : S.st !== 'todas' && l._st !== S.st) return false;
   if (!skipCats && S.cats.size && !S.cats.has(l.cat)) return false;
   if (S.prov && l.prov !== S.prov) return false;
+  if (S.depto && depto(l) !== S.depto) return false;
   if (S.src && srcKey(l) !== S.src) return false;
   if (S.foto && !l.thumb) return false;
   if (S.est && !l.est) return false;
@@ -357,7 +361,7 @@ function card(g) {
     <div class="cb">
       <div class="l1"><span class="pill ${l._st}">${PILL[l._st]}</span>${esNuevo(l) ? '<span class="nuevo">Nuevo</span>' : ''}<span class="when">${esc(when(l))}</span></div>
       <h3>${esc(l.title)}</h3>${g.length > 1 ? `<p class="grupo">${g.length} lotes iguales${rango(g)}</p>` : ''}
-      <p class="where">${esc(l.prov)} · ${esc(SRC[srcKey(l)].name)}</p>
+      <p class="where">${esc(l.prov)} · ${depto(l) ? 'Depto. Judicial ' + esc(depto(l)) : esc(SRC[srcKey(l)].name)}</p>
       <p class="price">${priceHTML(l)}</p>${bidHTML(l)}
       ${l.est ? `<p class="est">${estHTML(l)}</p>` : ''}
     </div>
@@ -389,6 +393,7 @@ function render() {
     : '<p class="empty">No hay lotes con esos filtros. Probá con menos palabras o tocá “Limpiar filtros”.</p>';
   botonMas();
   $('#clear').hidden = !(S.q || S.st !== 'activas' || S.cats.size || S.prov || S.src || S.foto || S.est || S.fav);
+  $('#depto').hidden = S.prov !== 'Buenos Aires';
 }
 
 function botonMas() {
@@ -526,7 +531,8 @@ function bind() {
     else S.cats.has(b.dataset.cat) ? S.cats.delete(b.dataset.cat) : S.cats.add(b.dataset.cat);
     shown = PAGE; render();
   });
-  for (const [id, k] of [['prov', 'prov'], ['src', 'src'], ['sort', 'sort']])
+  $('#prov').addEventListener('change', () => { S.depto = ''; $('#depto').value = ''; });   // corre antes que el de abajo
+  for (const [id, k] of [['prov', 'prov'], ['depto', 'depto'], ['src', 'src'], ['sort', 'sort']])
     $('#' + id).addEventListener('change', e => { S[k] = e.target.value; shown = PAGE; render(); });
   for (const [id, k] of [['fFoto', 'foto'], ['fEst', 'est'], ['fFav', 'fav']])
     $('#' + id).addEventListener('change', e => { S[k] = e.target.checked; shown = PAGE; render(); });
@@ -535,8 +541,8 @@ function bind() {
     shown += PAGE; botonMas();
   });
   $('#clear').addEventListener('click', () => {
-    Object.assign(S, {q:'', st:'activas', prov:'', src:'', foto:false, est:false, fav:false}); S.cats.clear();
-    $('#q').value = ''; $('#prov').value = ''; $('#src').value = '';
+    Object.assign(S, {q:'', st:'activas', prov:'', depto:'', src:'', foto:false, est:false, fav:false}); S.cats.clear();
+    $('#q').value = ''; $('#prov').value = ''; $('#depto').value = ''; $('#src').value = '';
     ['fFoto', 'fEst', 'fFav'].forEach(id => $('#' + id).checked = false);
     shown = PAGE; render();
   });
@@ -556,9 +562,11 @@ Promise.all([
   fetch('data/meta.json').then(r => r.ok ? r.json() : {}).catch(() => ({}))
 ]).then(([data, meta]) => {
   LOTS = data; META = meta;
-  LOTS.forEach(l => { l._s = words([l.title, l.cat, l.prov, l.org, l.code, l.place, l.auction_title].join(' ')); l._k = clave(l); BYID[l.id] = l; });
+  LOTS.forEach(l => { l._s = words([l.title, l.cat, l.prov, l.org, l.court, l.code, l.place, l.auction_title].join(' ')); l._k = clave(l); BYID[l.id] = l; });
   const provs = [...new Set(LOTS.map(l => l.prov))].sort((a, b) => a.localeCompare(b, 'es'));
   $('#prov').innerHTML = '<option value="">Todas las provincias</option>' + provs.map(p => `<option>${esc(p)}</option>`).join('');
+  const deptos = [...new Set(LOTS.map(depto).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es'));
+  $('#depto').innerHTML = '<option value="">Todos los departamentos judiciales</option>' + deptos.map(d => `<option>${esc(d)}</option>`).join('');
   $('#src').innerHTML = '<option value="">Todas las fuentes</option>' + Object.entries(SRC).map(([k, v]) => `<option value="${k}">${esc(v.short)}</option>`).join('');
   const nEst = LOTS.filter(l => l.est).length, nFoto = LOTS.filter(l => l.thumb).length, nNuevos = LOTS.filter(esNuevo).length;
   const upd = () => $('#meta').textContent = `${LOTS.length.toLocaleString('es-AR')} lotes · ${nFoto.toLocaleString('es-AR')} con foto` +
