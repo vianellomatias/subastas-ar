@@ -130,9 +130,9 @@ def lotes(nav):
 
 def descripciones(nav, lots, cache, presupuesto=12 * 60):
     """Reemplaza el título cortado de cada lote por la descripción completa de su página (con caché por lote).
-    Lo que no entre en el presupuesto de tiempo queda para la próxima corrida."""
+    Lo que no entre en el presupuesto de tiempo queda para la próxima corrida; primero van los lotes no finalizados."""
     t0, nuevas = time.time(), 0
-    for l in lots:
+    for l in sorted(lots, key=lambda l: l.get('price_label') == 'Precio final'):
         if l['src'] != 'bancociudad' or '/lote/' not in l['url']:
             continue
         lid = l['url'].rsplit('/', 1)[1]
