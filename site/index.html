@@ -31,6 +31,7 @@
   --c-mkt:#3f7fc4; --c-base:#d8702a; --c-bid:#8a6fd8; color-scheme:dark;
 }
 *{box-sizing:border-box}
+[hidden]{display:none !important}
 html,body{margin:0}
 body{background:var(--bg);color:var(--ink);font:16px/1.45 var(--f-body);-webkit-text-size-adjust:100%}
 a{color:var(--accent)}
@@ -83,6 +84,7 @@ select{padding:8px 10px;border:1px solid var(--line);border-radius:8px;backgroun
 .pill.cancelada{color:var(--bad)} .pill.sin_fecha{color:var(--done)}
 .pill.finalizada::before,.pill.cancelada::before{border-radius:1px}
 .when{color:var(--muted);font-variant-numeric:tabular-nums}
+.nuevo{font-weight:700;font-size:12px;line-height:1;padding:4px 8px;border-radius:999px;background:var(--accent);color:var(--accent-ink)}
 .card h3{font:600 16px/1.3 var(--f-body);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .where{margin:0;font-size:13px;color:var(--muted)}
 .price{margin:0;font-variant-numeric:tabular-nums}
@@ -154,6 +156,7 @@ footer p{max-width:70ch}
       <select id="src" aria-label="Fuente"></select>
       <select id="sort" aria-label="Ordenar">
         <option value="proximas">Próximas a comenzar</option>
+        <option value="nuevos">Recién publicados</option>
         <option value="terminan">Terminan antes</option>
         <option value="recientes">Finalizadas más recientes</option>
         <option value="oportunidad">Base más baja vs. mercado</option>
@@ -228,6 +231,21 @@ const SRC = {
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const norm = s => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+const words = s => ' ' + norm(s).replace(/[^a-z0-9]+/g, ' ').trim() + ' ';   // para buscar por comienzo de palabra
+// Palabras que se buscan como rubro (así "motos" no trae celulares Motorola ni motores)
+const ALIAS = {moto: ['Motos'], motos: ['Motos'], bici: ['Bicicletas'], bicis: ['Bicicletas'], bicicleta: ['Bicicletas'],
+  bicicletas: ['Bicicletas'], auto: ['Autos y camionetas'], autos: ['Autos y camionetas'], camion: ['Camiones y utilitarios'],
+  camiones: ['Camiones y utilitarios'], herramienta: ['Herramientas'], herramientas: ['Herramientas'],
+  maquina: ['Maquinaria industrial', 'Maquinaria agrícola y vial'], maquinas: ['Maquinaria industrial', 'Maquinaria agrícola y vial'],
+  maquinaria: ['Maquinaria industrial', 'Maquinaria agrícola y vial'], inmueble: ['Inmuebles'], inmuebles: ['Inmuebles'],
+  campo: ['Campos y rurales'], campos: ['Campos y rurales']};
+// Cada palabra buscada: si es un rubro, filtra por rubro; si es corta (≤ 4 letras), palabra completa o plural; si no, comienzo de palabra
+function prueba(w) {
+  if (ALIAS[w]) return l => ALIAS[w].includes(l.cat);
+  const re = w.length <= 4 ? new RegExp(' ' + w + '(e?s)? ') : null;
+  return re ? l => re.test(l._s) : l => l._s.includes(' ' + w);
+}
+const esNuevo = l => l.visto && Date.now() - Date.parse(l.visto) < 48 * 3600e3;
 const srcKey = l => l.src === 'esubasta' ? (l.sub_src === 'subastas_electrónicas' ? 'privadas' : 'esubasta') : l.src;
 const toCur = (v, from, to) => from === to ? v : from === 'USD' ? v * TC : v / TC;
 const money = (v, c) => (c === 'USD' ? 'US$\u00a0' : '$\u00a0') + Math.round(v).toLocaleString('es-AR');
@@ -235,7 +253,7 @@ const short = (v, c) => (c === 'USD' ? 'US$\u00a0' : '$\u00a0') + (v >= 1e6 ? (v
   : v >= 1e4 ? Math.round(v / 1e3).toLocaleString('es-AR') + '\u00a0mil' : Math.round(v).toLocaleString('es-AR'));
 const fd = s => new Date(s).toLocaleString('es-AR', {day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit', timeZone:'America/Argentina/Buenos_Aires'});
 
-let LOTS = [], shown = PAGE;
+let LOTS = [], LIST = [], BYID = {}, shown = PAGE;
 const S = {q:'', st:'activas', cats:new Set(), prov:'', src:'', sort:'proximas', foto:false, est:false, fav:false};
 const FAV = new Set((() => { try { return JSON.parse(localStorage.getItem('subastas-fav') || '[]'); } catch { return []; } })());
 const saveFav = () => { try { localStorage.setItem('subastas-fav', JSON.stringify([...FAV])); } catch {} };
@@ -292,7 +310,7 @@ function matches(l, skipCats) {
   if (S.foto && !l.thumb) return false;
   if (S.est && !l.est) return false;
   if (S.fav && !FAV.has(l.id)) return false;
-  return S.terms.every(w => l._s.includes(w));
+  return S.pruebas.every(f => f(l));
 }
 const RANK = {en_curso:0, proxima:1, sin_fecha:2, finalizada:3, cancelada:4};
 function sortKey(l) {
@@ -300,6 +318,7 @@ function sortKey(l) {
   const base = l.price == null ? null : toCur(l.price, l.cur, 'ARS');
   switch (S.sort) {
     case 'proximas': return [{proxima:0, en_curso:1, sin_fecha:2, finalizada:3, cancelada:4}[l._st], l._st === 'proxima' ? s : l._st === 'en_curso' ? e : -e];
+    case 'nuevos': return [l.visto ? 0 : 1, -(Date.parse(l.visto) || 0)];
     case 'terminan': return [RANK[l._st], l._st === 'finalizada' ? -e : e];
     case 'recientes': return [l._st === 'finalizada' ? 0 : 1, -e];
     case 'oportunidad': { const g = gap(l); return [g == null ? 1 : 0, g ?? 0]; }
@@ -310,11 +329,11 @@ function sortKey(l) {
 const cmp = (a, b) => { for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return a[i] < b[i] ? -1 : 1; return 0; };
 
 function card(l) {
-  return `<article class="card">
+  return `<article class="card" data-id="${esc(l.id)}">
   <a class="open" href="#l=${encodeURIComponent(l.id)}">
     <div class="ph${l.thumb ? '' : ' noimg'}">${l.thumb ? `<img src="${esc(l.thumb)}" alt="" loading="lazy" onerror="this.parentNode.classList.add('noimg')">` : ''}<span>${esc(l.cat)}</span></div>
     <div class="cb">
-      <div class="l1"><span class="pill ${l._st}">${PILL[l._st]}</span><span class="when">${esc(when(l))}</span></div>
+      <div class="l1"><span class="pill ${l._st}">${PILL[l._st]}</span>${esNuevo(l) ? '<span class="nuevo">Nuevo</span>' : ''}<span class="when">${esc(when(l))}</span></div>
       <h3>${esc(l.title)}</h3>
       <p class="where">${esc(l.prov)} · ${esc(SRC[srcKey(l)].name)}</p>
       <p class="price">${priceHTML(l)}</p>${bidHTML(l)}
@@ -327,7 +346,7 @@ function card(l) {
 
 function render() {
   LOTS.forEach(l => l._st = status(l));
-  S.terms = norm(S.q).split(/\s+/).filter(Boolean);
+  S.pruebas = words(S.q).split(' ').filter(Boolean).map(prueba);
   // chips de estado
   $('#st').innerHTML = Object.entries(ST).map(([k, v]) => `<button type="button" data-st="${k}" aria-pressed="${S.st === k}">${v}</button>`).join('');
   // chips de rubro con conteo según el resto de los filtros
@@ -338,13 +357,24 @@ function render() {
     `<button type="button" class="preset" data-preset="1" aria-pressed="${favOn}">Vehículos, herramientas y máquinas</button>` +
     Object.entries(counts).sort((a, b) => b[1] - a[1]).map(([c, n]) =>
       `<button type="button" data-cat="${esc(c)}" aria-pressed="${S.cats.has(c)}">${esc(c)} <span class="n">${n}</span></button>`).join('');
-  const list = LOTS.filter(l => matches(l)).map(l => [sortKey(l), l]).sort((a, b) => cmp(a[0], b[0])).map(x => x[1]);
-  $('#count').textContent = list.length === 1 ? '1 lote' : list.length.toLocaleString('es-AR') + ' lotes';
-  $('#grid').innerHTML = list.length ? list.slice(0, shown).map(card).join('')
+  LIST = LOTS.filter(l => matches(l)).map(l => [sortKey(l), l]).sort((a, b) => cmp(a[0], b[0])).map(x => x[1]);
+  $('#count').textContent = LIST.length === 1 ? '1 lote' : LIST.length.toLocaleString('es-AR') + ' lotes';
+  $('#grid').innerHTML = LIST.length ? LIST.slice(0, shown).map(card).join('')
     : '<p class="empty">No hay lotes con esos filtros. Probá con menos palabras o tocá “Limpiar filtros”.</p>';
-  $('#more').hidden = list.length <= shown;
-  $('#more').textContent = `Mostrar más (${(list.length - shown).toLocaleString('es-AR')} restantes)`;
+  botonMas();
   $('#clear').hidden = !(S.q || S.st !== 'activas' || S.cats.size || S.prov || S.src || S.foto || S.est || S.fav);
+}
+
+function botonMas() {
+  const resto = LIST.length - shown;
+  $('#more').hidden = resto <= 0;
+  if (resto > 0) $('#more').textContent = `Mostrar ${Math.min(PAGE, resto)} más (quedan ${resto.toLocaleString('es-AR')})`;
+}
+function tick() {   // cada minuto: cuentas regresivas al día; solo se rearma la lista si algún lote cambió de estado
+  let cambio = false;
+  LOTS.forEach(l => { const s = status(l); if (s !== l._st) { l._st = s; cambio = true; } });
+  if (cambio) return render();
+  document.querySelectorAll('#grid .card').forEach(c => { c.querySelector('.when').textContent = when(BYID[c.dataset.id]); });
 }
 
 function chart(l, width) {
@@ -465,7 +495,10 @@ function bind() {
     $('#' + id).addEventListener('change', e => { S[k] = e.target.value; shown = PAGE; render(); });
   for (const [id, k] of [['fFoto', 'foto'], ['fEst', 'est'], ['fFav', 'fav']])
     $('#' + id).addEventListener('change', e => { S[k] = e.target.checked; shown = PAGE; render(); });
-  $('#more').addEventListener('click', () => { shown += PAGE; render(); });
+  $('#more').addEventListener('click', () => {
+    $('#grid').insertAdjacentHTML('beforeend', LIST.slice(shown, shown + PAGE).map(card).join(''));
+    shown += PAGE; botonMas();
+  });
   $('#clear').addEventListener('click', () => {
     Object.assign(S, {q:'', st:'activas', prov:'', src:'', foto:false, est:false, fav:false}); S.cats.clear();
     $('#q').value = ''; $('#prov').value = ''; $('#src').value = '';
@@ -480,7 +513,7 @@ function bind() {
   $('#dlg').addEventListener('click', e => { if (e.target === e.currentTarget) e.currentTarget.close(); });
   $('#dlg').addEventListener('close', () => { if (location.hash) history.replaceState(null, '', location.pathname + location.search); });
   addEventListener('hashchange', fromHash);
-  setInterval(render, 60000);   // estados y cuentas regresivas al minuto
+  setInterval(tick, 60000);
 }
 
 Promise.all([
@@ -488,12 +521,13 @@ Promise.all([
   fetch('data/meta.json').then(r => r.ok ? r.json() : {}).catch(() => ({}))
 ]).then(([data, meta]) => {
   LOTS = data; META = meta;
-  LOTS.forEach(l => l._s = norm([l.title, l.cat, l.prov, l.org, l.code, l.place, l.auction_title].join(' ')));
+  LOTS.forEach(l => { l._s = words([l.title, l.cat, l.prov, l.org, l.code, l.place, l.auction_title].join(' ')); BYID[l.id] = l; });
   const provs = [...new Set(LOTS.map(l => l.prov))].sort((a, b) => a.localeCompare(b, 'es'));
   $('#prov').innerHTML = '<option value="">Todas las provincias</option>' + provs.map(p => `<option>${esc(p)}</option>`).join('');
   $('#src').innerHTML = '<option value="">Todas las fuentes</option>' + Object.entries(SRC).map(([k, v]) => `<option value="${k}">${esc(v.short)}</option>`).join('');
-  const nEst = LOTS.filter(l => l.est).length, nFoto = LOTS.filter(l => l.thumb).length;
+  const nEst = LOTS.filter(l => l.est).length, nFoto = LOTS.filter(l => l.thumb).length, nNuevos = LOTS.filter(esNuevo).length;
   const upd = () => $('#meta').textContent = `${LOTS.length.toLocaleString('es-AR')} lotes · ${nFoto.toLocaleString('es-AR')} con foto` +
+    (nNuevos ? ` · ${nNuevos} nuevos en las últimas 48 h` : '') +
     (META.generado ? ` · actualizado ${hace(META.generado)} (se actualiza solo cada 2 horas)` : '');
   upd(); setInterval(upd, 60000);
   $('#foot2').textContent = `Precio de mercado: ${nEst} lotes de vehículos, máquinas y herramientas tienen una referencia de avisos de usados (Autocosmos), guías o tiendas. MercadoLibre no permite leer sus listados en forma automática. Es una referencia, no una tasación.`;

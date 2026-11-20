@@ -44,6 +44,8 @@ tests/            pruebas de los parsers con páginas reales recortadas
 - Si una fuente falla, se publica su última versión buena y la tabla "Fuentes y cobertura" lo muestra.
 - Entre corridas se guardan en la caché de Actions las fotos, las fichas de lotes y los precios, así cada actualización solo baja lo nuevo.
 - Los estados y las cuentas regresivas se recalculan en el navegador con la hora actual.
+- Cada lote guarda cuándo apareció por primera vez: los de las últimas 48 h llevan la etiqueta "Nuevo" y se pueden ordenar con "Recién publicados".
+- El buscador toma las palabras de rubro como rubro ("motos", "bici", "herramientas"…), las palabras cortas como palabra completa y el resto por comienzo de palabra.
 
 ## Probar en la computadora
 

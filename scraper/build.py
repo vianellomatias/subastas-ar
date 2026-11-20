@@ -52,6 +52,20 @@ def fuente(nombre, fn, estado):
         return prev.get('lots', [])
 
 
+def marcar_vistos(lots, path, dias=30):
+    """Guarda cuándo apareció cada lote por primera vez (campo 'visto') para marcar los nuevos.
+    En la primera corrida no hay historia: nada se marca como nuevo."""
+    ahora, vistos = time.time(), leer(path, None)
+    primera, vistos = vistos is None, vistos or {}
+    for l in lots:
+        primero = vistos.get(l['id'], [0 if primera else ahora])[0]
+        vistos[l['id']] = [primero, ahora]
+        if primero:
+            l['visto'] = datetime.fromtimestamp(primero, timezone.utc).isoformat(timespec='minutes')
+    # se recuerdan 30 días: si una fuente falla un rato, sus lotes no reaparecen como nuevos
+    escribir(path, {k: v for k, v in vistos.items() if ahora - v[1] < dias * 86400})
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--sin-red', action='store_true', help='usar solo lo guardado en cache/')
@@ -84,6 +98,7 @@ def main():
     n_precios = precios.estimar(lots, os.path.join(CACHE, 'precios.json'),
                                 os.path.join(RAIZ, 'data', 'precios_manual.json'), red=not sin_red)
     log.info('fotos y precios en %.0f s', time.time() - t0)
+    marcar_vistos(lots, os.path.join(CACHE, 'vistos.json'))
     lots = [{k: v for k, v in l.items() if v not in (None, '') and k != 'img'} for l in lots]
     ahora = datetime.now(timezone.utc)
     meta = {'generado': ahora.isoformat(timespec='seconds'), 'lotes': len(lots), 'fotos': n_fotos,

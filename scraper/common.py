@@ -54,56 +54,84 @@ CATS = ['Autos y camionetas', 'Motos', 'Camiones y utilitarios', 'Bicicletas', '
         'Derechos y acciones', 'Marcas y acciones', 'Otros']
 
 
+# Reglas de rubro (frases separadas por coma). Gana la primera que coincide, así que el orden importa:
+# "celulares Motorola moto g22" es Tecnología antes que Motos y "todo terreno" es un auto, no un terreno.
+REGLAS = [
+    ('Tecnología', 'celular, celulares, smartphone, motorola, iphone, galaxy, tablet, tablets, notebook, notebooks, '
+                   'computadora, computadoras, cpu, monitor, monitores, consola, consolas, playstation, play station, '
+                   'xbox, nintendo, auriculares, antena, antenas'),
+    ('Camiones y utilitarios', 'camion, camiones, semirremolque, acoplado, batea, carreton, minibus, furgon, furgoneta, '
+                               'utilitario, trafic, sprinter, daily, kangoo, fiorino, partner, berlingo, boxer, master, '
+                               'jumper, ducato, transit, hiace, carroceria'),
+    ('Autos y camionetas', 'automotor, automotores, automovil, automoviles, camioneta, camionetas, pick up, pickup, '
+                           'sedan, motorhome, todo terreno, 4x4, coupe, hatchback'),
+    ('Náutica', 'lancha, lanchas, velero, barco, nautica, gomon, embarcacion, kayak, moto de agua, jet ski'),
+    ('Bicicletas', 'bicicleta, bicicletas, mountainbike, mountain bike, bici, bmx'),
+    ('Muebles y oficina', 'mobiliario, muebles'),
+    ('Campos y rurales', 'campo, campos, chacra, hectareas, establecimiento agropecuario, establec agropecuario, '
+                         'inmueble rural, fraccion de campo'),
+    ('Marcas y acciones', 'marca registrada, marcas registradas, tipo mixta, tipo denominativa, tipo figurativa, '
+                          'acciones nominativas, acciones clase, paquete accionario'),
+    ('Inmuebles', 'inmueble, inmuebles, lote de terreno, lote baldio, terreno, terrenos, departamento, depto, dpto, '
+                  'unidad funcional, uf, u f, ph, casa, vivienda, galpon, cochera, edificio, local comercial, quinta, '
+                  'parcela, fraccion, ubicado en, ubicada en, superficie, m2, nomenclatura catastral, cabanas, '
+                  'planta industrial, solar, propiedad, ambientes, amb, baulera, piso, locales, playa de estacionamiento, '
+                  'chalet, monoambiente, oficina, oficinas, salon comercial, lote bladio, parte indivisa, edilicio, '
+                  'estacion de servicio, est de serv, en la localidad'),
+    ('Maquinaria agrícola y vial', 'tractor, tractores, cosechadora, pulverizadora, sembradora, tolva, retroexcavadora, '
+                                   'motoniveladora, topadora, autoelevador, autoelevadores, excavadora, cargadora, '
+                                   'minicargadora, rastra, arado, rotoenfardadora'),
+    ('Maquinaria industrial', 'torno, tornos, fresadora, balancin, plegadora, guillotina, prensa, prensadora, '
+                              'enfardadora, punzonadora, extrusora, confeccionadora, impresora rotocalco, cnc, '
+                              'puente grua, lijadora de banda, pegadora, enfichadora, escuadradora, estampadora, '
+                              'cabina de pintura, cabinas de pintura, compresor, compresores, motocompresor, '
+                              'grupo electrogeno, grupos electrogenos, grupos electrogeno, generador, generadores, '
+                              'telar, telares, lampara de secado, maquina de coser, maquinas de coser, elevador, balanceadora, desarmadora, tronzadora, '
+                              'proyector de perfiles, camara de frio, racks, lavadora de canto, bancada, turbina, '
+                              'turbinas, silo, caldera, montacargas, transpaleta'),
+    ('Herramientas', 'herramienta, herramientas, taladro, taladros, agujereadora, agujereadoras, amoladora, amoladoras, '
+                     'soldadora, soldadoras, soldar, sierra, sierras, caladora, llave de impacto, rotopercutor, '
+                     'roto percutor, martillo, esmeril, morsa, pistola, termofusora, nivel laser, tarraja, tarrajas, '
+                     'torquimetro, calibre, calibres, motosierra, motosierras, motocierra, motoguadana, motoguadanas, '
+                     'desmalezadora, bordeadora, sopladora, sopladoras, hidrolavadora, hidro lavadora, escalera, '
+                     'andamio, gato hidraulico, llaves, mandril, mandriles, odometro, odometros, pulidora, lijadora, '
+                     'atornillador, remachadora, aspiradores, podadora, carretilla, carretillas, hidrolavadoras, '
+                     'plancha vibratoria, planchas vibratorias, cortadora, hoyadora, hoyadoras, vibroapisonador, '
+                     'perforadora, matafuegos, soldadura, rectificador'),
+    ('Maquinaria industrial', 'maquinaria, maquinarias, maquina, maquinas'),
+    ('Motos', 'motocicleta, motocicletas, ciclomotor, cuatriciclo, motomel, scooter, motito, moto, motos, cg150, cg 150, '
+              'ybr, gilera, zanella, corven, keller, kawasaki, harley, ducati, ktm, bajaj, royal enfield'),
+    ('Electro y hogar', 'heladera, heladeras, freezer, lavarropa, lavarropas, secarropas, cocina, microondas, horno, '
+                        'aire acondicionado, aires acondicionados, estufa, caloventor, cafetera, electrodomesticos, '
+                        'dispenser, frigobar, cava, ventilador, aspiradora, plancha, olla, ollas, vajilla'),
+    ('Muebles y oficina', 'mobiliario, muebles, mueble, escritorio, escritorios, silla, sillas, sillon, sillones, mesa, mesas, '
+                          'biblioteca, estanteria, estanterias, lockers, tarimas, pallets, mostrador, banqueta, '
+                          'placard, cama, colchon'),
+    ('Tecnología', 'pc, impresora, impresoras, televisor, '
+                   'televisores, tv, smart, parlante, parlantes, camaras de seguridad, router, informatica, servidor'),
+    ('Arte, joyas y antigüedades', 'anillo, anillos, reloj, relojes, joya, joyas, oro, cuadro, cuadros, pintura, '
+                                   'obra de arte, antiguedad, antiguedades, escultura, monedas, billetes'),
+    ('Derechos y acciones', 'derechos y acciones, derechos hereditarios, cuota parte, indiviso'),
+    ('Autos y camionetas', 'toyota, ford, chevrolet, volkswagen, vw, fiat, renault, peugeot, citroen, nissan, honda, '
+                           'audi, bmw, mercedes, chery, jeep, suzuki, kia, hyundai, alfa romeo, volvo, mustang, etios, '
+                           'corolla, hilux, ranger, amarok, s10, saveiro, strada, gol, palio, cronos, mobi, onix, cruze, '
+                           'sandero, logan, clio, megane, focus, fiesta, ka, tracker, meriva, corsa, agile, prisma, '
+                           'frontier, tiggo'),
+]
+_REGLAS = [(rubro, re.compile(r'\b(?:' + '|'.join(re.escape(f.strip()) for f in frases.split(',')) + r')\b'))
+           for rubro, frases in REGLAS]
+CAMPO = re.compile(r'\b(?:campo|campos|has|hectareas|hectarea|chacra|establecimiento|rural|agropecuario)\b')
+
+
 def cat_from_text(t, kind=None):
-    n = norm(t)
-
-    def has(*ws):
-        return any(re.search(r'\b' + w + r'\b', n) for w in ws)
-
-    if has('lote baldio', 'terreno', 'inmueble', 'departamento'): return 'Inmuebles'  # antes que 'sierra' (Sierra de los Padres)
-    if has('auriculares'): return 'Tecnología'
-    if has('bicicleta', 'bicicletas', 'mountainbike', 'mountain bike', 'bici'): return 'Bicicletas'
-    if has('motocicleta', 'moto', 'motos', 'ciclomotor', 'cuatriciclo', 'motomel', 'yamaha ybr', 'honda cg'): return 'Motos'
-    if has('lancha', 'velero', 'barco', 'nautica', 'gomon', 'embarcacion'): return 'Náutica'
-    if has('tractor', 'cosechadora', 'pulverizadora', 'sembradora', 'tolva', 'retroexcavadora', 'motoniveladora',
-           'topadora', 'autoelevador', 'excavadora'): return 'Maquinaria agrícola y vial'
-    if has('camion', 'semirremolque', 'acoplado', 'batea', 'carreton', 'minibus', 'furgon', 'utilitario', 'trafic',
-           'sprinter', 'daily', 'kangoo', 'fiorino', 'partner', 'berlingo', 'boxer', 'master', 'carroceria'):
-        return 'Camiones y utilitarios'
-    if has('automotor', 'automovil', 'auto', 'pick up', 'pick-up', 'pickup', 'camioneta', 'sedan', 'hilux', 'ranger',
-           'amarok', 's10', 's-10', 'saveiro', 'strada', 'toyota', 'peugeot', 'renault', 'chevrolet', 'fiat', 'ford',
-           'volkswagen', 'citroen', 'nissan', 'honda', 'audi', 'bmw', 'mercedes', 'chery', 'jeep', 'suzuki', 'kia',
-           'hyundai', 'alfa romeo', 'volvo', 'mustang', 'etios', 'corolla', 'gol', 'palio', 'cronos', 'mobi', 'onix',
-           'cruze', 'sandero', 'logan', 'clio', 'megane', 'focus', 'fiesta', 'ka', 'tracker', 'meriva', 'corsa',
-           'agile', 'prisma', 'frontier', 'tiggo', 'motorhome'): return 'Autos y camionetas'
-    if has('torno', 'fresadora', 'balancin', 'plegadora', 'guillotina', 'prensa', 'punzonadora', 'extrusora',
-           'confeccionadora', 'enfardadora', 'impresora rotocalco', 'cnc', 'puente grua', 'lijadora de banda',
-           'pegadora', 'enfichadora', 'escuadradora', 'transfer', 'estampadora', 'cabina de pintura',
-           'cabinas de pintura', 'compresor', 'grupo electrogeno', 'telares', 'maquinarias', 'maquina', 'elevador',
-           'balanceadora', 'desarmadora', 'tronzadora', 'proyector de perfiles', 'tinglado', 'camara de frio',
-           'racks', 'lavadora de canto', 'bancada'): return 'Maquinaria industrial'
-    if has('herramienta', 'herramientas', 'taladro', 'amoladora', 'soldadora', 'sodadoras', 'sierra', 'caladora',
-           'llave de impacto', 'roto percutor', 'rotopercutor', 'martillo', 'esmeril', 'morsa', 'pistola',
-           'termofusora', 'nivel laser', 'tarrajas', 'torquimetro', 'calibres', 'motocierra', 'escalera', 'andamio',
-           'gato hidraulico', 'llaves', 'mandriles', 'aspiradores'): return 'Herramientas'
-    if kind == 'Inmueble' or has('casa', 'depto', 'dpto', 'lote', 'local', 'galpon', 'oficina', 'cochera', 'ph',
-                                 'cabanas', 'vivienda', 'edificio', 'planta industrial', 'baldio', 'quinta', 'piso'):
-        if has('campo', 'has', 'hectareas', 'hectarea', 'chacra', 'establec', 'rural', 'agropecuario'):
-            return 'Campos y rurales'
-        return 'Inmuebles'
-    if has('campo', 'hectareas', 'chacra', 'rural'): return 'Campos y rurales'
-    if has('notebook', 'cpu', 'computadora', 'computadoras', 'pc', 'monitor', 'monitores', 'consolas', 'playstation',
-           'ps5', 'celular', 'celulares', 'informatic', 'tv', 'televisor', 'smart', 'parlante', 'camaras de seguridad'):
-        return 'Tecnología'
-    if has('heladera', 'freezer', 'lavarropa', 'lavarropas', 'secarropas', 'cocina', 'microondas', 'horno',
-           'aire acondicionado', 'aires acondicionados', 'estufa', 'caloventor', 'cafetera', 'electrodomesticos',
-           'dispenser', 'frigobar', 'cava'): return 'Electro y hogar'
-    if has('mobiliario', 'muebles', 'mueble', 'escritorio', 'silla', 'sillas', 'sillon', 'mesa', 'biblioteca',
-           'estanterias', 'lockers', 'tarimas', 'pallets', 'mostrador'): return 'Muebles y oficina'
-    if has('anillo', 'reloj', 'relojes', 'joya', 'joyas', 'oro', 'cuadro', 'pintura', 'obra de arte', 'antiguedad',
-           'escultura', 'moneda', 'monedas'): return 'Arte, joyas y antigüedades'
-    if has('derechos y acciones', 'derechos'): return 'Derechos y acciones'
-    if has('marca', 'acciones nominativas'): return 'Marcas y acciones'
+    n = ' '.join(re.sub(r'[^a-z0-9]+', ' ', norm(t)).split())
+    if kind == 'Inmueble':
+        return 'Campos y rurales' if CAMPO.search(n) else 'Inmuebles'
+    if re.match(r'marcas? ', n):  # 'Marca "valle de golf"': se remata la marca registrada
+        return 'Marcas y acciones'
+    for rubro, rx in _REGLAS:
+        if rx.search(n):
+            return 'Campos y rurales' if rubro == 'Inmuebles' and CAMPO.search(n) else rubro
     return 'Otros'
 
 

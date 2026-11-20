@@ -97,3 +97,29 @@ def test_utilidades():
     assert common.money('U$S 130.000,00') == 130000
     assert common.sentence('FORD KA FLY') == 'Ford ka fly'
     assert common.cat_from_text('Lote baldío - Sierra de los Padres') == 'Inmuebles'
+
+
+def test_rubros_con_titulos_reales():
+    casos = {
+        'Cinco celulares marca motorola, modelo moto g22. se vende en el estado': 'Tecnología',
+        'Cuatro lotes marca samsung, modelo galaxy a03. se vende en el estado': 'Tecnología',
+        'Cuatro computadoras de escritorio marca lenovo, modelos V520S': 'Tecnología',
+        '3 sopladoras a explosión marca daewo portatil modelo dabl2600 con moto': 'Herramientas',
+        'Un lote integrado por 4 motosierras a explosion marca stihl de diferentes': 'Herramientas',
+        'Un lote integrado por: 2 maquinas de soldar portatil marca hamilton': 'Herramientas',
+        'Un generador electrico portatil, marca honda modelo ez6500 cxs motor': 'Maquinaria industrial',
+        'Un motocompresor, marca cetec, modelo dtr175, serie nro 5746, presión': 'Maquinaria industrial',
+        'Extrusora de film de polietileno, tambien llamada sopladora': 'Maquinaria industrial',
+        'Automotor- toyota hilux sw4 4x4 srv 3.0 tdia/t c/cuero- todo terreno- año 2007': 'Autos y camionetas',
+        'Una camioneta usada sin funcionar, marca citroen, modelo jumper': 'Camiones y utilitarios',
+        'Motocicleta- motomel cx150- año 2014': 'Motos',
+        'Velero 20 pies s/motor, con mástil recostado- modelo h20': 'Náutica',
+        'Motoniveladora CMZ Zanello R.U. 13.200': 'Maquinaria agrícola y vial',
+        'Ubicado en Bme. Mitre 5754, UF. 2, Caseros, Bs. As. Se trata de un departamento': 'Inmuebles',
+        'Mobiliario de oficina- equipamiento informático- mesa de reuniones': 'Muebles y oficina',
+        "Marca ''valle de golf''": 'Marcas y acciones',
+        'Lote baldío - Sierra de los Padres': 'Inmuebles',
+    }
+    for titulo, rubro in casos.items():
+        assert common.cat_from_text(titulo) == rubro, titulo
+    assert common.cat_from_text('Flores- piso c/ 4 amb.', 'Inmueble') == 'Inmuebles'
