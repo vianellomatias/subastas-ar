@@ -122,20 +122,27 @@ def listado(nav, src):
     return parse_listado(nav.html(PORTALES[src] + '/', selector='li.auction_card'), src)
 
 
-def detalles(nav, lots, cache, horas=72):
-    """Completa fechas de inicio, base, juzgado y lugar desde la ficha de cada lote (con caché)."""
+def detalles(nav, lots, cache, horas=72, presupuesto=15 * 60):
+    """Completa fechas de inicio, base, juzgado y lugar desde la ficha de cada lote (con caché).
+    Baja primero las fichas que nunca se leyeron; lo que no entre en el presupuesto queda para la próxima corrida."""
     ahora, nuevos, fallas = time.time(), 0, 0
+    vencida = lambda l: l['src'] in PORTALES and l['status'] in ('proxima', 'en_curso') and not (
+        l['id'] in cache and ahora - cache[l['id']]['t'] < horas * 3600)
+    pendientes = sorted((l for l in lots if vencida(l)), key=lambda l: cache.get(l['id'], {}).get('t', 0))
+    for i, l in enumerate(pendientes if nav else []):
+        if time.time() - ahora > presupuesto:
+            log.info('fichas: presupuesto agotado, quedan %d para la próxima corrida', len(pendientes) - i)
+            break
+        try:
+            cache[l['id']] = {'t': time.time(), **parse_detalle(nav.html(l['url'], timeout=45_000))}
+            nuevos += 1
+        except Exception as e:  # una ficha caída no frena el resto
+            fallas += 1
+            log.warning('ficha %s: %s', l['id'], e)
+        if (i + 1) % 25 == 0:
+            log.info('fichas: %d de %d', i + 1, len(pendientes))
     for l in lots:
-        if l['src'] not in PORTALES:
-            continue
-        c = cache.get(l['id'])
-        if nav and l['status'] in ('proxima', 'en_curso') and not (c and ahora - c['t'] < horas * 3600):
-            try:
-                c = cache[l['id']] = {'t': ahora, **parse_detalle(nav.html(l['url']))}
-                nuevos += 1
-            except Exception as e:  # una ficha caída no frena el resto
-                fallas += 1
-                log.warning('ficha %s: %s', l['id'], e)
+        c = cache.get(l['id']) if l['src'] in PORTALES else None
         if c:
             l.update({k: v for k, v in c.items() if k != 't'})
             if c.get('place'):

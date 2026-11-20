@@ -36,13 +36,14 @@ def escribir(path, obj):
 
 def fuente(nombre, fn, estado):
     """Corre una fuente; si falla o viene vacía, devuelve la última versión buena."""
-    path = os.path.join(CACHE, 'fuentes', nombre + '.json')
+    path, t0 = os.path.join(CACHE, 'fuentes', nombre + '.json'), time.time()
     try:
         lots = fn()
         if not lots:
             raise RuntimeError('no devolvió lotes')
         escribir(path, {'t': time.time(), 'lots': lots})
         estado[nombre] = {'ok': True, 'n': len(lots), 't': time.time()}
+        log.info('%s: %d lotes en %.0f s', nombre, len(lots), time.time() - t0)
         return lots
     except Exception as e:
         log.exception('falló la fuente %s', nombre)
@@ -78,9 +79,11 @@ def main():
 
     shutil.rmtree(OUT, ignore_errors=True)
     shutil.copytree(SITE, OUT)
+    t0 = time.time()
     n_fotos = fotos.miniaturas(lots, os.path.join(CACHE, 'fotos'), os.path.join(OUT, 'img'), red=not sin_red)
     n_precios = precios.estimar(lots, os.path.join(CACHE, 'precios.json'),
                                 os.path.join(RAIZ, 'data', 'precios_manual.json'), red=not sin_red)
+    log.info('fotos y precios en %.0f s', time.time() - t0)
     lots = [{k: v for k, v in l.items() if v not in (None, '') and k != 'img'} for l in lots]
     ahora = datetime.now(timezone.utc)
     meta = {'generado': ahora.isoformat(timespec='seconds'), 'lotes': len(lots), 'fotos': n_fotos,

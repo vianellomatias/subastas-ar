@@ -38,7 +38,7 @@ def miniaturas(lots, cache_dir, out_dir, red=True, workers=8):
             log.info('sin foto %s: %s', l['id'], e)
             return False
 
-    pendientes = [l for l in lots if red and l.get('img') and not os.path.exists(ruta(l))]
+    pendientes = [l for l in lots if red and l.get('img') and 'placehold' not in l['img'] and not os.path.exists(ruta(l))]
     with ThreadPoolExecutor(workers) as ex:
         nuevas = sum(ex.map(bajar, pendientes))
     con_foto = 0

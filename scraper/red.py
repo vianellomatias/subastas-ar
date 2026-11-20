@@ -37,7 +37,7 @@ class Navegador:
                         else r.continue_())
         return self
 
-    def html(self, url, selector=None, timeout=90_000):
+    def html(self, url, selector=None, timeout=60_000):
         """Devuelve el HTML ya renderizado; si se indica selector, espera a que aparezca."""
         self.page.goto(url, wait_until='domcontentloaded', timeout=timeout)
         if selector:

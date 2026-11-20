@@ -14,7 +14,7 @@ from .red import get
 
 URL = 'https://www.autocosmos.com.ar/auto/usado/{marca}/{modelo}?a={anio}'
 AVISO = re.compile(r'([^"<>]{3,140}?) usado \((\d{4})\) color [^"<>]*? precio (u\$s|\$)\s?([\d.]+)', re.I)
-DIAS_OK, DIAS_ERROR, MAX_CONSULTAS = 7, 1, 150
+DIAS_OK, DIAS_ERROR, MAX_CONSULTAS, PAUSA = 7, 1, 150, 2.0  # PAUSA: segundos entre consultas (evita el 429)
 CATS = ('Autos y camionetas', 'Camiones y utilitarios')
 MARCAS = {'toyota': 'toyota', 'ford': 'ford', 'chevrolet': 'chevrolet', 'volkswagen': 'volkswagen',
           'vw': 'volkswagen', 'peugeot': 'peugeot', 'renault': 'renault', 'fiat': 'fiat', 'citroen': 'citroen',
@@ -112,6 +112,7 @@ class Autocosmos:
         vigente = c and time.time() - c['t'] < (DIAS_ERROR if c.get('error') else DIAS_OK) * 86400
         if not vigente and self.red and self.consultas < MAX_CONSULTAS:
             self.consultas += 1
+            time.sleep(PAUSA)
             try:
                 html = get(URL.format(marca=marca, modelo=modelo, anio=anio), tries=2, timeout=45).text
                 c = self.cache[k] = {'t': time.time(), 'avisos': parse_avisos(html, modelo, anio)}
