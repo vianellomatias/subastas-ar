@@ -256,8 +256,9 @@ function prueba(w) {
   const re = w.length <= 4 ? new RegExp(' ' + w + '(e?s)? ') : null;
   return re ? l => re.test(l._s) : l => l._s.includes(' ' + w);
 }
-// Lo que distingue unidades del mismo artículo: n° de serie, motor, chasis, dominio o lote, y horas de uso
-const ID = /\b(?:serie|nro|n[°º]|n[uú]mero|dominio|chasis)\.?\s*(?:(?:nro|n[°º]|n[uú]mero)\.?\s*)?[a-z0-9][a-z0-9\-\/.]*\d[a-z0-9\-\/]*|\b\d+\s*(?:hs|hrs|horas)\b/gi;
+// Lo que distingue unidades del mismo artículo: n° de serie, motor, chasis, dominio o lote, horas de uso
+// y códigos largos con números (series sin rótulo)
+const ID = /\b(?:(?:nros?|n[°º]s?|n[uú]meros?)\.?\s*(?:de\s+)?serie|serie|nros?|n[°º]|n[uú]mero|dominio|chasis)\.?[:,]?\s*(?:(?:nro|n[°º]|n[uú]mero)\.?\s*)?[a-z0-9][a-z0-9\-\/.]*\d[a-z0-9\-\/]*|\b\d+\s*(?:hs|hrs|horas)\b|\b(?=[a-z]*\d)[a-z0-9]{11,}\b/gi;
 // Lotes iguales: misma fuente, subasta (o juzgado) y rubro, y el mismo texto salvo esos datos
 const clave = l => [l.src, l.auction_title || l.org || '', l.cat, words(l.title.replace(ID, ' '))].join('|');
 const esNuevo = l => l.visto && Date.now() - Date.parse(l.visto) < 48 * 3600e3;
@@ -469,7 +470,7 @@ function detail(l) {
         const ids = x.title.match(ID) || [], nombre = x.code ? x.code.replace(/^Subasta \d+ · /, '') : ids.shift() || 'Ver ficha';
         return `<li>${x.thumb ? `<img src="${esc(x.thumb)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">` : '<span class="mini"></span>'}
         <span><a href="#l=${encodeURIComponent(x.id)}"${x.id === l.id ? ' aria-current="true"' : ''}>${esc(nombre[0].toUpperCase() + nombre.slice(1))}</a>
-        <small>${x.price != null ? money(x.price, x.cur) + ' · ' : ''}${PILL[status(x)]}${ids.map(t => ' · ' + esc(t)).join('')}</small></span></li>`; }).join('')}</ul>
+        <small>${x.price != null ? money(x.price, x.cur) + ' · ' : ''}${PILL[status(x)]}${ids.slice(0, 3).map(t => ' · ' + esc(t)).join('')}${ids.length > 3 ? ' …' : ''}</small></span></li>`; }).join('')}</ul>
     </section>` : ''}
     <section class="box" aria-labelledby="hT">
       <h3 id="hT">Cómo participar</h3>
